@@ -138,15 +138,21 @@ const app = {
 
     moveTaskUp(id) {
         const index = this.tasks.findIndex(t => t.id === id);
-        if (index > 0) {
-            // Swap with previous item in the array
-            // Note: Since we render reversed, "moving up" means moving closer to the end of the array
-            // but the user wants it to go "up" in the visual list.
-            // If the list is reversed, the last item in the array is at the top.
-            // So to move UP visually, we need to move it TOWARDS the end of the array.
+        if (index === -1) return;
+
+        // Visual "Up" in reversed list means moving closer to the end of the array
+        let nextIndex = -1;
+        for (let i = index + 1; i < this.tasks.length; i++) {
+            if (!this.tasks[i].archived) {
+                nextIndex = i;
+                break;
+            }
+        }
+
+        if (nextIndex !== -1) {
             const temp = this.tasks[index];
-            this.tasks[index] = this.tasks[index + 1];
-            this.tasks[index + 1] = temp;
+            this.tasks[index] = this.tasks[nextIndex];
+            this.tasks[nextIndex] = temp;
 
             this.save();
             this.render();
