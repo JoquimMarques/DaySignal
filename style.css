@@ -235,6 +235,114 @@ main {
     transform: scale(0.98);
 }
 
+/* Procedence Styles */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.input-group select {
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-size: 1rem;
+    outline: none;
+    cursor: pointer;
+}
+
+[data-theme="dark"] .input-group select {
+    background: #2a2a2a;
+    border-color: #444;
+}
+
+.procedence-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-right: 10px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.procedence-normal .procedence-badge {
+    background: rgba(0, 122, 255, 0.1);
+    color: #007aff;
+}
+
+.procedence-urgent .procedence-badge {
+    background: rgba(255, 69, 58, 0.1);
+    color: #ff453a;
+}
+
+.procedence-low .procedence-badge {
+    background: rgba(52, 199, 89, 0.1);
+    color: #34c759;
+}
+
+.procedence-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-light);
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    margin-left: auto;
+}
+
+.procedence-selector i {
+    font-size: 0.8rem;
+    color: var(--primary);
+}
+
+.procedence-selector select {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Push Settings */
+#push-toggle {
+    margin-left: auto;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-status-done {
+    background: rgba(52, 199, 89, 0.1) !important;
+    color: #34c759 !important;
+}
+
+.btn-status-failed {
+    background: rgba(255, 69, 58, 0.1) !important;
+    color: #ff453a !important;
+}
+
 .task-content {
     display: flex;
     align-items: center;
@@ -562,10 +670,6 @@ main {
         grid-template-columns: repeat(4, 1fr);
     }
 
-    .cal-day:nth-child(n+5) {
-        /* Optional: Hide some on very small screens if preferred, 
-           but better to let them wrap */
-    }
 }
 
 /* Floating Action Button-ish */
@@ -611,4 +715,73 @@ main {
 
 .settings-item.danger {
     color: var(--danger);
+}
+
+/* Push Prompt Banner */
+.push-prompt-card {
+    background: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    border-left: 4px solid var(--primary);
+    animation: fadeIn 0.5s ease;
+}
+
+.push-prompt-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.push-prompt-content i {
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+.push-prompt-text h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.push-prompt-text p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+#activate-push-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-close-minimal {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.5;
+}
+
+.btn-close-minimal:hover {
+    opacity: 1;
 }

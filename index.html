@@ -53,6 +53,18 @@
                     <p id="today-stats">Carregando seus objetivos...</p>
                 </div>
 
+                <div id="push-prompt" class="push-prompt-card" style="display: none;">
+                    <div class="push-prompt-content">
+                        <i class="fas fa-bell"></i>
+                        <div class="push-prompt-text">
+                            <h4>Ativar Lembretes?</h4>
+                            <p>Recebe avisos quando tens muitas tarefas.</p>
+                        </div>
+                    </div>
+                    <button id="activate-push-btn">Ativar</button>
+                    <button id="close-push-prompt" class="btn-close-minimal"><i class="fas fa-times"></i></button>
+                </div>
+
                 <div class="progress-container">
                     <div class="progress-card">
                         <div class="circle-box">
@@ -117,6 +129,10 @@
                         <span>Apagar todos os dados</span>
                         <i class="fas fa-trash"></i>
                     </div>
+                    <div class="settings-item">
+                        <span>Notificações Web Push</span>
+                        <button id="push-toggle" class="btn-secondary">Ativar</button>
+                    </div>
                 </div>
             </section>
         </main>
@@ -146,6 +162,14 @@
             <div class="modal-content">
                 <h3>Nova Tarefa</h3>
                 <input type="text" id="task-input" placeholder="O que precisa ser feito?">
+                <div class="input-group">
+                    <label for="task-procedence">Procedência:</label>
+                    <select id="task-procedence">
+                        <option value="normal">Normal</option>
+                        <option value="urgent">Urgente ⚡</option>
+                        <option value="low">Baixa 💤</option>
+                    </select>
+                </div>
                 <div class="modal-buttons">
                     <button id="cancel-task">Cancelar</button>
                     <button id="save-task" class="btn-primary">Adicionar</button>

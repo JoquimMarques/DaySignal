@@ -11,6 +11,8 @@ const app = {
         this.bindEvents();
         this.render();
         this.updateStats();
+        this.initPush();
+        this.startNotificationInterval();
     },
 
     cacheDOM() {
@@ -26,6 +28,11 @@ const app = {
         this.themeToggle = document.getElementById('theme-toggle');
         this.darkModeCheck = document.getElementById('dark-mode-check');
         this.resetBtn = document.getElementById('reset-data');
+        this.taskProcedence = document.getElementById('task-procedence');
+        this.pushToggle = document.getElementById('push-toggle');
+        this.pushPrompt = document.getElementById('push-prompt');
+        this.activatePushBtn = document.getElementById('activate-push-btn');
+        this.closePushPrompt = document.getElementById('close-push-prompt');
     },
 
     bindEvents() {
@@ -53,6 +60,20 @@ const app = {
                 this.save();
                 this.render();
             }
+        });
+
+        // Push Toggle
+        this.pushToggle.addEventListener('click', () => this.togglePush());
+
+        // Push Prompt Interaction
+        this.activatePushBtn.addEventListener('click', () => {
+            this.togglePush();
+            this.pushPrompt.style.display = 'none';
+        });
+
+        this.closePushPrompt.addEventListener('click', () => {
+            this.pushPrompt.style.display = 'none';
+            localStorage.setItem('push_prompt_dismissed', 'true');
         });
 
         // Close modal on outside click
@@ -95,12 +116,14 @@ const app = {
             id: Date.now(),
             text,
             status: 'pending', // pending, completed, failed
+            procedence: this.taskProcedence.value,
             date: new Date().toISOString().split('T')[0]
         };
 
         this.tasks.push(newTask);
         this.save();
         this.taskInput.value = '';
+        this.taskProcedence.value = 'normal';
         this.toggleModal(false);
         this.render();
         this.updateStats();
@@ -113,6 +136,15 @@ const app = {
             this.save();
             this.render();
             this.updateStats();
+        }
+    },
+
+    updateTaskProcedence(id, level) {
+        const task = this.tasks.find(t => t.id === id);
+        if (task) {
+            task.procedence = level;
+            this.save();
+            this.render();
         }
     },
 
@@ -148,6 +180,9 @@ const app = {
             pendingCount = todayTasks.length - completedCount - failedCount;
             percent = Math.round((completedCount / todayTasks.length) * 100);
         }
+
+        // Check for notification trigger
+        this.checkNotificationTrigger(pendingCount);
 
         // Circular Progress Update
         this.updateProgressCircles(completedCount, failedCount, todayTasks.length);
@@ -244,6 +279,79 @@ const app = {
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
     },
 
+    initPush() {
+        if (!('Notification' in window)) {
+            this.pushToggle.disabled = true;
+            this.pushToggle.innerText = 'Não Suportado';
+            return;
+        }
+
+        this.updatePushUI();
+    },
+
+    updatePushUI() {
+        const isGranted = Notification.permission === 'granted';
+        const isDenied = Notification.permission === 'denied';
+        const isDismissed = localStorage.getItem('push_prompt_dismissed') === 'true';
+
+        if (isGranted) {
+            this.pushToggle.innerText = 'Ativado';
+            this.pushToggle.classList.add('btn-status-done');
+            this.pushPrompt.style.display = 'none';
+        } else if (isDenied) {
+            this.pushToggle.innerText = 'Bloqueado';
+            this.pushToggle.classList.add('btn-status-failed');
+            this.pushPrompt.style.display = 'none';
+        } else {
+            this.pushToggle.innerText = 'Ativar';
+            // Show prompt only on home screen, if not dismissed and permission is default
+            this.pushPrompt.style.display = (this.currentScreen === 'home' && !isDismissed) ? 'flex' : 'none';
+        }
+    },
+
+    async togglePush() {
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            this.updatePushUI();
+            if (permission === 'granted') {
+                new Notification('DaySignal', { body: 'As notificações estão ativadas!' });
+            }
+        } else if (Notification.permission === 'denied') {
+            alert('Por favor, ative as notificações nas definições do seu navegador.');
+        }
+    },
+
+    startNotificationInterval() {
+        // Run every 2 minutes (120,000 ms)
+        setInterval(() => {
+            const today = new Date().toISOString().split('T')[0];
+            const pendingTasks = this.tasks.filter(t => !t.archived && t.date === today && t.status === 'pending');
+            this.checkNotificationTrigger(pendingTasks.length, true);
+        }, 120000);
+    },
+
+    checkNotificationTrigger(pendingCount, fromInterval = false) {
+        if (Notification.permission === 'granted' && pendingCount > 2) {
+            if (fromInterval) {
+                // Interval reminder: Always send if count > 2
+                new Notification('DaySignal (Lembrete)', {
+                    body: `Ainda tens ${pendingCount} tarefas pendentes! Vamos conclui-las? ⏳`,
+                    icon: './android-chrome-192x192.png'
+                });
+            } else {
+                // Manual update: Only send if count changed to avoid spam on every render
+                const lastNotify = localStorage.getItem('last_notify_count');
+                if (lastNotify !== pendingCount.toString()) {
+                    new Notification('DaySignal', {
+                        body: `Tens ${pendingCount} tarefas pendentes! Vamos focar? 🚀`,
+                        icon: './android-chrome-192x192.png'
+                    });
+                    localStorage.setItem('last_notify_count', pendingCount.toString());
+                }
+            }
+        }
+    },
+
     render() {
         const today = new Date().toISOString().split('T')[0];
         const activeTasks = this.tasks.filter(t => !t.archived);
@@ -265,7 +373,14 @@ const app = {
     createTaskElement(task, mini = false) {
         const div = document.createElement('div');
         const isFinalized = task.status !== 'pending';
-        div.className = `task-item ${task.status === 'completed' ? 'completed' : ''} ${task.status === 'failed' ? 'not-completed' : ''}`;
+        const procedence = task.procedence || 'normal';
+        div.className = `task-item ${task.status === 'completed' ? 'completed' : ''} ${task.status === 'failed' ? 'not-completed' : ''} procedence-${procedence}`;
+
+        const procedenceLabels = {
+            'normal': 'Normal',
+            'urgent': 'Urgente ⚡',
+            'low': 'Baixa 💤'
+        };
 
         let actionsHtml = '';
         if (isFinalized) {
@@ -286,13 +401,24 @@ const app = {
                     <button class="btn-action btn-todo" onclick="app.updateTaskStatus(${task.id}, 'failed')">
                         <i class="fas fa-xmark"></i> Não Concluir
                     </button>
+                    <div class="procedence-selector">
+                        <i class="fas fa-arrow-up-wide-short"></i>
+                        <select onchange="app.updateTaskProcedence(${task.id}, this.value)">
+                            <option value="normal" ${procedence === 'normal' ? 'selected' : ''}>Normal</option>
+                            <option value="urgent" ${procedence === 'urgent' ? 'selected' : ''}>Urgente</option>
+                            <option value="low" ${procedence === 'low' ? 'selected' : ''}>Baixa</option>
+                        </select>
+                    </div>
                 </div>
             `;
         }
 
         div.innerHTML = `
             <div class="task-content">
-                <span class="task-text">${task.text}</span>
+                <span class="task-text">
+                    <span class="procedence-badge">${procedenceLabels[procedence]}</span>
+                    ${task.text}
+                </span>
                 ${(!mini && !isFinalized) ? `<button class="btn-action btn-delete" onclick="app.deleteTask(${task.id})"><i class="fas fa-trash"></i></button>` : ''}
             </div>
             ${actionsHtml}

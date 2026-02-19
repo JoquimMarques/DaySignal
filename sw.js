@@ -38,3 +38,44 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
+// Web Push Events
+self.addEventListener('push', (event) => {
+    let data = { title: 'DaySignal', body: 'Tens uma nova atualização!' };
+
+    if (event.data) {
+        try {
+            data = event.data.json();
+        } catch (e) {
+            data.body = event.data.text();
+        }
+    }
+
+    const options = {
+        body: data.body,
+        icon: './android-chrome-192x192.png',
+        badge: './favicon-32x32.png',
+        vibrate: [100, 50, 100],
+        data: {
+            dateOfArrival: Date.now(),
+            primaryKey: '2'
+        },
+        actions: [
+            { action: 'explore', title: 'Ver Agora', icon: './favicon-32x32.png' },
+            { action: 'close', title: 'Fechar', icon: './favicon-32x32.png' },
+        ]
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(data.title, options)
+    );
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    if (event.action === 'explore') {
+        event.waitUntil(
+            clients.openWindow('/')
+        );
+    }
+});
