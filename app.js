@@ -401,14 +401,6 @@ const app = {
                     <button class="btn-action btn-todo" onclick="app.updateTaskStatus(${task.id}, 'failed')">
                         <i class="fas fa-xmark"></i> Não Concluir
                     </button>
-                    <div class="procedence-selector">
-                        <i class="fas fa-arrow-up-wide-short"></i>
-                        <select onchange="app.updateTaskProcedence(${task.id}, this.value)">
-                            <option value="normal" ${procedence === 'normal' ? 'selected' : ''}>Normal</option>
-                            <option value="urgent" ${procedence === 'urgent' ? 'selected' : ''}>Urgente</option>
-                            <option value="low" ${procedence === 'low' ? 'selected' : ''}>Baixa</option>
-                        </select>
-                    </div>
                 </div>
             `;
         }
@@ -419,7 +411,19 @@ const app = {
                     <span class="procedence-badge">${procedenceLabels[procedence]}</span>
                     ${task.text}
                 </span>
-                ${(!mini && !isFinalized) ? `<button class="btn-action btn-delete" onclick="app.deleteTask(${task.id})"><i class="fas fa-trash"></i></button>` : ''}
+                <div class="task-meta-actions">
+                    ${(!mini && !isFinalized) ? `
+                        <div class="procedence-selector-mini">
+                            <i class="fas fa-arrow-up-wide-short"></i>
+                            <select onchange="app.updateTaskProcedence(${task.id}, this.value)">
+                                <option value="normal" ${procedence === 'normal' ? 'selected' : ''}>N</option>
+                                <option value="urgent" ${procedence === 'urgent' ? 'selected' : ''}>U</option>
+                                <option value="low" ${procedence === 'low' ? 'selected' : ''}>B</option>
+                            </select>
+                        </div>
+                    ` : ''}
+                    ${(!mini && !isFinalized) ? `<button class="btn-action btn-delete" onclick="app.deleteTask(${task.id})"><i class="fas fa-trash"></i></button>` : ''}
+                </div>
             </div>
             ${actionsHtml}
         `;

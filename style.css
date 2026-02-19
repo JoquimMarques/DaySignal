@@ -6,7 +6,7 @@
     --card-bg: #ffffff;
     --text-main: #2d3436;
     --text-muted: #636e72;
-    --success: #3baf50;
+    --success: #28923c;
     --danger: #ff5e57;
     --accent: #5f27cd;
     --nav-height: 75px;
@@ -292,30 +292,38 @@ main {
     color: #34c759;
 }
 
-.procedence-selector {
+.procedence-selector-mini {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     background: var(--bg-light);
-    padding: 4px 12px;
+    padding: 2px 8px;
     border-radius: 8px;
     border: 1px solid rgba(0, 0, 0, 0.05);
-    margin-left: auto;
 }
 
-.procedence-selector i {
-    font-size: 0.8rem;
+.procedence-selector-mini i {
+    font-size: 0.7rem;
     color: var(--primary);
 }
 
-.procedence-selector select {
+.procedence-selector-mini select {
     background: transparent;
     border: none;
     color: var(--text-main);
     font-family: inherit;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 700;
     outline: none;
     cursor: pointer;
+    padding: 2px 0;
+}
+
+.task-meta-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
 }
 
 /* Push Settings */
