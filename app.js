@@ -28,7 +28,6 @@ const app = {
         this.themeToggle = document.getElementById('theme-toggle');
         this.darkModeCheck = document.getElementById('dark-mode-check');
         this.resetBtn = document.getElementById('reset-data');
-        this.taskProcedence = document.getElementById('task-procedence');
         this.pushToggle = document.getElementById('push-toggle');
         this.pushPrompt = document.getElementById('push-prompt');
         this.activatePushBtn = document.getElementById('activate-push-btn');
@@ -116,14 +115,12 @@ const app = {
             id: Date.now(),
             text,
             status: 'pending', // pending, completed, failed
-            procedence: this.taskProcedence.value,
             date: new Date().toISOString().split('T')[0]
         };
 
         this.tasks.push(newTask);
         this.save();
         this.taskInput.value = '';
-        this.taskProcedence.value = 'normal';
         this.toggleModal(false);
         this.render();
         this.updateStats();
@@ -139,10 +136,18 @@ const app = {
         }
     },
 
-    updateTaskProcedence(id, level) {
-        const task = this.tasks.find(t => t.id === id);
-        if (task) {
-            task.procedence = level;
+    moveTaskUp(id) {
+        const index = this.tasks.findIndex(t => t.id === id);
+        if (index > 0) {
+            // Swap with previous item in the array
+            // Note: Since we render reversed, "moving up" means moving closer to the end of the array
+            // but the user wants it to go "up" in the visual list.
+            // If the list is reversed, the last item in the array is at the top.
+            // So to move UP visually, we need to move it TOWARDS the end of the array.
+            const temp = this.tasks[index];
+            this.tasks[index] = this.tasks[index + 1];
+            this.tasks[index + 1] = temp;
+
             this.save();
             this.render();
         }
@@ -373,14 +378,7 @@ const app = {
     createTaskElement(task, mini = false) {
         const div = document.createElement('div');
         const isFinalized = task.status !== 'pending';
-        const procedence = task.procedence || 'normal';
-        div.className = `task-item ${task.status === 'completed' ? 'completed' : ''} ${task.status === 'failed' ? 'not-completed' : ''} procedence-${procedence}`;
-
-        const procedenceLabels = {
-            'normal': 'Normal',
-            'urgent': 'Urgente ⚡',
-            'low': 'Baixa 💤'
-        };
+        div.className = `task-item ${task.status === 'completed' ? 'completed' : ''} ${task.status === 'failed' ? 'not-completed' : ''}`;
 
         let actionsHtml = '';
         if (isFinalized) {
@@ -408,19 +406,13 @@ const app = {
         div.innerHTML = `
             <div class="task-content">
                 <span class="task-text">
-                    <span class="procedence-badge">${procedenceLabels[procedence]}</span>
                     ${task.text}
                 </span>
                 <div class="task-meta-actions">
                     ${(!mini && !isFinalized) ? `
-                        <div class="procedence-selector-mini">
-                            <i class="fas fa-arrow-up-wide-short"></i>
-                            <select onchange="app.updateTaskProcedence(${task.id}, this.value)">
-                                <option value="normal" ${procedence === 'normal' ? 'selected' : ''}>N</option>
-                                <option value="urgent" ${procedence === 'urgent' ? 'selected' : ''}>U</option>
-                                <option value="low" ${procedence === 'low' ? 'selected' : ''}>B</option>
-                            </select>
-                        </div>
+                        <button class="btn-action btn-move-up" onclick="app.moveTaskUp(${task.id})">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
                     ` : ''}
                     ${!mini ? `<button class="btn-action btn-delete" onclick="app.deleteTask(${task.id})"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
