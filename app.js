@@ -422,7 +422,7 @@ const app = {
                             </select>
                         </div>
                     ` : ''}
-                    ${(!mini && !isFinalized) ? `<button class="btn-action btn-delete" onclick="app.deleteTask(${task.id})"><i class="fas fa-trash"></i></button>` : ''}
+                    ${!mini ? `<button class="btn-action btn-delete" onclick="app.deleteTask(${task.id})"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
             </div>
             ${actionsHtml}

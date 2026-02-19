@@ -364,24 +364,24 @@ main {
 }
 
 .task-item.completed {
-    background: var(--success);
-    color: white;
-    border: none;
+    background: var(--card-bg);
+    border-left: 6px solid var(--success);
+    opacity: 0.8;
 }
 
 .task-item.completed .task-text {
     text-decoration: line-through;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-muted);
 }
 
 .task-item.not-completed {
-    background: var(--danger);
-    color: white;
-    border: none;
+    background: var(--card-bg);
+    border-left: 6px solid var(--danger);
+    opacity: 0.8;
 }
 
 .task-item.not-completed .task-text {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-muted);
 }
 
 .task-actions {
@@ -422,8 +422,9 @@ main {
 
 .task-item.completed .btn-delete.btn-status-done,
 .task-item.not-completed .btn-delete.btn-status-failed {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: var(--bg-light);
+    color: var(--text-muted);
+    opacity: 0.6;
 }
 
 /* Bottom Nav */
