@@ -1,0 +1,614 @@
+:root {
+    --primary: #ff6b00;
+    --primary-dark: #e65f00;
+    --secondary: #2d3436;
+    --bg-light: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-main: #2d3436;
+    --text-muted: #636e72;
+    --success: #3baf50;
+    --danger: #ff5e57;
+    --accent: #5f27cd;
+    --nav-height: 75px;
+    --safe-bottom: env(safe-area-inset-bottom);
+    --radius: 20px;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] {
+    --bg-light: #121212;
+    --card-bg: #1e1e1e;
+    --text-main: #f8f9fa;
+    --text-muted: #a0a0a0;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    line-height: 1.5;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+}
+
+/* Header */
+.header {
+    height: 60px;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.header-actions button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+/* Main Content */
+main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    padding-bottom: calc(var(--nav-height) + 20px);
+}
+
+.screen {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Cards & Components */
+.welcome-card {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 24px;
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+    box-shadow: 0 10px 20px rgba(255, 107, 0, 0.2);
+}
+
+.welcome-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.welcome-card p {
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+/* Progress Circles Section */
+.progress-container {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.progress-card {
+    flex: 1;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: var(--radius);
+    text-align: center;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.circle-box {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.circle-box svg {
+    transform: rotate(-90deg);
+}
+
+.circle-box circle {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+}
+
+.circle-box .bg {
+    stroke: var(--bg-light);
+}
+
+.circle-box .progress {
+    stroke-dasharray: 282.7;
+    stroke-dashoffset: 282.7;
+    transition: stroke-dashoffset 0.5s ease-in-out;
+}
+
+.circle-box .progress.done {
+    stroke: var(--success);
+}
+
+.circle-box .progress.failed {
+    stroke: var(--danger);
+}
+
+.stat-num {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.section-header button {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Task List Styles */
+.tasks-list,
+.tasks-mini-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.task-item {
+    background: var(--card-bg);
+    padding: 16px;
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease;
+}
+
+.task-item:active {
+    transform: scale(0.98);
+}
+
+.task-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.task-text {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.task-item.completed {
+    background: var(--success);
+    color: white;
+    border: none;
+}
+
+.task-item.completed .task-text {
+    text-decoration: line-through;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.task-item.not-completed {
+    background: var(--danger);
+    color: white;
+    border: none;
+}
+
+.task-item.not-completed .task-text {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.task-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-action {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-done {
+    background: #e3f9f1;
+    color: var(--success);
+}
+
+.btn-todo {
+    background: #feebeb;
+    color: var(--danger);
+}
+
+.btn-delete {
+    background: #f1f2f6;
+    color: var(--text-muted);
+    width: 45px;
+    flex: none;
+}
+
+.task-item.completed .btn-delete.btn-status-done,
+.task-item.not-completed .btn-delete.btn-status-failed {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+    height: var(--nav-height);
+    background: var(--card-bg);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: var(--safe-bottom);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.03);
+    z-index: 1000;
+}
+
+.nav-item {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    gap: 4px;
+    flex: 1;
+    transition: all 0.2s ease;
+}
+
+.nav-item i {
+    font-size: 1.3rem;
+}
+
+.nav-item.active {
+    color: var(--primary);
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    align-items: flex-end;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    width: 100%;
+    padding: 30px 24px calc(30px + var(--safe-bottom));
+    border-radius: 24px 24px 0 0;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+#task-input {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid var(--bg-light);
+    border-radius: 12px;
+    margin: 20px 0;
+    font-family: inherit;
+    font-size: 1rem;
+    background: var(--bg-light);
+    color: var(--text-main);
+    caret-color: var(--primary);
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.modal-buttons button {
+    flex: 1;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+/* Calendar */
+.calendar-container {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    margin-top: 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.calendar-header-box h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.calendar-header-box p {
+    font-size: 0.85rem;
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+.cal-day {
+    aspect-ratio: 1/1.2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    background: rgba(255, 107, 0, calc(var(--intensity) * 0.15));
+    cursor: pointer;
+}
+
+.cal-day.has-tasks {
+    background: rgba(255, 107, 0, var(--intensity));
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(255, 107, 0, calc(var(--intensity) * 0.3));
+}
+
+.cal-day.has-tasks .cal-label,
+.cal-day.has-tasks .cal-date {
+    color: white;
+}
+
+.cal-day.is-today {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.cal-day:hover {
+    transform: translateY(-5px) scale(1.05);
+    z-index: 10;
+}
+
+.cal-day:hover .cal-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-10px);
+}
+
+.cal-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 2px;
+    color: var(--text-muted);
+}
+
+.cal-date {
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+.cal-progress-dot {
+    width: 4px;
+    height: 4px;
+    background: currentColor;
+    border-radius: 50%;
+    margin-top: 4px;
+}
+
+.cal-tooltip {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    background: var(--secondary);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.cal-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--secondary);
+}
+
+.cal-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 10px;
+}
+
+.legend-scale {
+    display: flex;
+    gap: 4px;
+}
+
+.scale-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+@media (max-width: 400px) {
+    .cal-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .cal-day:nth-child(n+5) {
+        /* Optional: Hide some on very small screens if preferred, 
+           but better to let them wrap */
+    }
+}
+
+/* Floating Action Button-ish */
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.fab-inline {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 15px rgba(255, 107, 0, 0.3);
+}
+
+/* Settings */
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.settings-item {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    box-shadow: var(--shadow);
+}
+
+.settings-item.danger {
+    color: var(--danger);
+}

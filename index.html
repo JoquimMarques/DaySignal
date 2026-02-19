@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DaySignal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="57x57" href="apple-touch-icon-57x57.png">
+
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="mstile-144x144.png">
+    <meta name="msapplication-config" content="browserconfig.xml">
+
+    <meta name="theme-color" content="#ff6b00">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div id="app">
+        <header class="header">
+            <h1 id="screen-title">DaySignal</h1>
+            <div class="header-actions">
+                <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+            </div>
+        </header>
+
+        <!-- Main Content (Screens) -->
+        <main id="main-content">
+            <!-- Home Screen -->
+            <section id="screen-home" class="screen active">
+                <div class="welcome-card">
+                    <h2>Olá! Pronto para o foco?</h2>
+                    <p id="today-stats">Carregando seus objetivos...</p>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-card">
+                        <div class="circle-box">
+                            <svg width="100" height="100">
+                                <circle class="bg" cx="50" cy="50" r="45"></circle>
+                                <circle class="progress done" id="circle-done" cx="50" cy="50" r="45"></circle>
+                            </svg>
+                            <span id="text-done" class="stat-num">0</span>
+                        </div>
+                        <span class="stat-label">Concluídas</span>
+                    </div>
+                    <div class="progress-card">
+                        <div class="circle-box">
+                            <svg width="100" height="100">
+                                <circle class="bg" cx="50" cy="50" r="45"></circle>
+                                <circle class="progress failed" id="circle-failed" cx="50" cy="50" r="45"></circle>
+                            </svg>
+                            <span id="text-failed" class="stat-num">0</span>
+                        </div>
+                        <span class="stat-label">Não Concluídas</span>
+                    </div>
+                </div>
+                <div class="recent-tasks">
+                    <div class="section-header">
+                        <h3>Últimas Tarefas</h3>
+                        <button onclick="app.navigateTo('tasks')">Ver tudo</button>
+                    </div>
+                    <div id="home-tasks-list" class="tasks-mini-list">
+                        <!-- Tasks will be injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tasks Screen -->
+            <section id="screen-tasks" class="screen">
+                <div class="tasks-header">
+                    <h2>Minhas Tarefas</h2>
+                    <button id="add-task-btn" class="fab-inline"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="full-tasks-list" class="tasks-list">
+                    <!-- Tasks will be injected here -->
+                </div>
+            </section>
+
+            <!-- Calendar Screen -->
+            <section id="screen-calendar" class="screen">
+                <h2>Acompanhamento</h2>
+                <div id="calendar-view" class="calendar-container">
+                    <!-- Calendar will be injected here -->
+                </div>
+            </section>
+
+            <!-- Settings Screen -->
+            <section id="screen-settings" class="screen">
+                <h2>Configurações</h2>
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <span>Tema Escuro</span>
+                        <input type="checkbox" id="dark-mode-check">
+                    </div>
+                    <div class="settings-item danger" id="reset-data">
+                        <span>Apagar todos os dados</span>
+                        <i class="fas fa-trash"></i>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-screen="home">
+                <i class="fas fa-home"></i>
+                <span>Início</span>
+            </button>
+            <button class="nav-item" data-screen="tasks">
+                <i class="fas fa-list-check"></i>
+                <span>Tarefas</span>
+            </button>
+            <button class="nav-item" data-screen="calendar">
+                <i class="fas fa-calendar-days"></i>
+                <span>Calendário</span>
+            </button>
+            <button class="nav-item" data-screen="settings">
+                <i class="fas fa-gear"></i>
+                <span>Ajustes</span>
+            </button>
+        </nav>
+
+        <!-- Add Task Modal -->
+        <div id="task-modal" class="modal">
+            <div class="modal-content">
+                <h3>Nova Tarefa</h3>
+                <input type="text" id="task-input" placeholder="O que precisa ser feito?">
+                <div class="modal-buttons">
+                    <button id="cancel-task">Cancelar</button>
+                    <button id="save-task" class="btn-primary">Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js');
+            });
+        }
+    </script>
+</body>
+
+</html>
