@@ -153,12 +153,14 @@ main {
     border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-.progress-card:hover {
+.progress-card:hover,
+.progress-card:active {
     transform: translateY(-5px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
 }
 
-[data-theme="dark"] .progress-card:hover {
+[data-theme="dark"] .progress-card:hover,
+[data-theme="dark"] .progress-card:active {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
 }
 
@@ -182,12 +184,14 @@ main {
     background: radial-gradient(circle, var(--danger) 0%, transparent 70%);
 }
 
-.progress-card:hover::before {
+.progress-card:hover::before,
+.progress-card:active::before {
     opacity: 0.05;
     transform: translate(-50%, -50%) scale(1);
 }
 
-[data-theme="dark"] .progress-card:hover::before {
+[data-theme="dark"] .progress-card:hover::before,
+[data-theme="dark"] .progress-card:active::before {
     opacity: 0.1;
 }
 
@@ -204,7 +208,8 @@ main {
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.progress-card:hover .circle-box {
+.progress-card:hover .circle-box,
+.progress-card:active .circle-box {
     transform: scale(1.05);
 }
 

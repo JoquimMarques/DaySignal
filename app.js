@@ -216,11 +216,13 @@ const app = {
         // SVG dasharray logic: circumference is 2 * PI * r (r=45 -> 282.7)
         const circumference = 282.7;
 
-        // Timeout ensures the CSS transition can play properly on initial load
+        // Timeout and requestAnimationFrame ensure the CSS transition plays properly on slower mobile devices
         setTimeout(() => {
-            doneCircle.style.strokeDashoffset = circumference - (donePercent / 100) * circumference;
-            failedCircle.style.strokeDashoffset = circumference - (failedPercent / 100) * circumference;
-        }, 50);
+            requestAnimationFrame(() => {
+                doneCircle.style.strokeDashoffset = circumference - (donePercent / 100) * circumference;
+                failedCircle.style.strokeDashoffset = circumference - (failedPercent / 100) * circumference;
+            });
+        }, 150);
 
         doneText.innerText = `${done}`;
         failedText.innerText = `${failed}`;
