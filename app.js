@@ -215,8 +215,12 @@ const app = {
 
         // SVG dasharray logic: circumference is 2 * PI * r (r=45 -> 282.7)
         const circumference = 282.7;
-        doneCircle.style.strokeDashoffset = circumference - (donePercent / 100) * circumference;
-        failedCircle.style.strokeDashoffset = circumference - (failedPercent / 100) * circumference;
+
+        // Timeout ensures the CSS transition can play properly on initial load
+        setTimeout(() => {
+            doneCircle.style.strokeDashoffset = circumference - (donePercent / 100) * circumference;
+            failedCircle.style.strokeDashoffset = circumference - (failedPercent / 100) * circumference;
+        }, 50);
 
         doneText.innerText = `${done}`;
         failedText.innerText = `${failed}`;
@@ -342,6 +346,8 @@ const app = {
     },
 
     checkNotificationTrigger(pendingCount, fromInterval = false) {
+        if (!('Notification' in window)) return;
+
         if (Notification.permission === 'granted' && pendingCount > 2) {
             if (fromInterval) {
                 // Interval reminder: Always send if count > 2
