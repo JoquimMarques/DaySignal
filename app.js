@@ -8,6 +8,7 @@ const app = {
 
     init() {
         this.cacheDOM();
+        this.initTheme(); // Initialize theme before anything else
         this.bindEvents();
         this.render();
         this.updateStats();
@@ -32,6 +33,8 @@ const app = {
         this.pushPrompt = document.getElementById('push-prompt');
         this.activatePushBtn = document.getElementById('activate-push-btn');
         this.closePushPrompt = document.getElementById('close-push-prompt');
+        this.progressDateBadge = document.getElementById('progress-date-badge');
+        this.testPushBtn = document.getElementById('test-push');
     },
 
     bindEvents() {
@@ -75,6 +78,8 @@ const app = {
             localStorage.setItem('push_prompt_dismissed', 'true');
         });
 
+        if (this.testPushBtn) this.testPushBtn.addEventListener('click', () => this.testNotification());
+
         // Close modal on outside click
         this.modal.addEventListener('click', (e) => {
             if (e.target === this.modal) this.toggleModal(false);
@@ -108,12 +113,14 @@ const app = {
     },
 
     addTask() {
-        const text = this.taskInput.value.trim();
-        if (!text) return;
+        const taskText = this.taskInput.value.trim();
+        if (!taskText || taskText.length > 75) {
+            return;
+        }
 
         const newTask = {
             id: Date.now(),
-            text,
+            text: taskText,
             status: 'pending', // pending, completed, failed
             date: new Date().toISOString().split('T')[0]
         };
@@ -180,6 +187,15 @@ const app = {
         const activeTasks = this.tasks.filter(t => !t.archived);
         const todayTasks = activeTasks.filter(t => t.date === today);
 
+        // Update Date Badge
+        if (this.progressDateBadge) {
+            const dateObj = new Date();
+            const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+            // Capitalize first letter and handle "Hoje"
+            const label = dayName.charAt(0).toUpperCase() + dayName.slice(1).split('-')[0];
+            this.progressDateBadge.innerText = `Resumo de Hoje • ${label}`;
+        }
+
         let completedCount = 0;
         let pendingCount = 0;
         let failedCount = 0;
@@ -196,36 +212,41 @@ const app = {
         this.checkNotificationTrigger(pendingCount);
 
         // Circular Progress Update
-        this.updateProgressCircles(completedCount, failedCount, todayTasks.length);
+        this.updateProgressCircles(completedCount, failedCount, pendingCount, todayTasks.length);
 
         // Dynamic Phrase
         this.updateDynamicPhrase(percent, todayTasks.length);
     },
 
-    updateProgressCircles(done, failed, total) {
+    updateProgressCircles(done, failed, pending, total) {
         const doneCircle = document.getElementById('circle-done');
         const failedCircle = document.getElementById('circle-failed');
+        const pendingCircle = document.getElementById('circle-pending');
         const doneText = document.getElementById('text-done');
         const failedText = document.getElementById('text-failed');
+        const pendingText = document.getElementById('text-pending');
 
         if (!doneCircle) return;
 
         const donePercent = total ? (done / total) * 100 : 0;
         const failedPercent = total ? (failed / total) * 100 : 0;
+        const pendingPercent = total ? (pending / total) * 100 : 0;
 
-        // SVG dasharray logic: circumference is 2 * PI * r (r=45 -> 282.7)
-        const circumference = 282.7;
+        // SVG dasharray logic: circumference is 2 * PI * r (r=34 -> 213.6)
+        const circumference = 213.6;
 
-        // Timeout and requestAnimationFrame ensure the CSS transition plays properly on slower mobile devices
-        setTimeout(() => {
-            requestAnimationFrame(() => {
-                doneCircle.style.strokeDashoffset = circumference - (donePercent / 100) * circumference;
-                failedCircle.style.strokeDashoffset = circumference - (failedPercent / 100) * circumference;
-            });
-        }, 150);
+        // Update immediately
+        requestAnimationFrame(() => {
+            doneCircle.style.strokeDashoffset = circumference - (donePercent / 100) * circumference;
+            failedCircle.style.strokeDashoffset = circumference - (failedPercent / 100) * circumference;
+            if (pendingCircle) {
+                pendingCircle.style.strokeDashoffset = circumference - (pendingPercent / 100) * circumference;
+            }
+        });
 
         doneText.innerText = `${done}`;
         failedText.innerText = `${failed}`;
+        if (pendingText) pendingText.innerText = `${pending}`;
     },
 
     updateDynamicPhrase(percent, total) {
@@ -285,6 +306,17 @@ const app = {
         phraseContainer.innerText = phrase;
     },
 
+    initTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            this.setTheme(savedTheme === 'dark');
+        } else {
+            // Check system preference
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            this.setTheme(prefersDark);
+        }
+    },
+
     toggleTheme() {
         const isDark = document.body.getAttribute('data-theme') === 'dark';
         this.setTheme(!isDark);
@@ -292,7 +324,14 @@ const app = {
 
     setTheme(isDark) {
         document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
-        this.darkModeCheck.checked = isDark;
+        if (this.darkModeCheck) this.darkModeCheck.checked = isDark;
+
+        // Update header icon
+        const icon = this.themeToggle ? this.themeToggle.querySelector('i') : null;
+        if (icon) {
+            icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
     },
 
@@ -331,7 +370,7 @@ const app = {
             const permission = await Notification.requestPermission();
             this.updatePushUI();
             if (permission === 'granted') {
-                new Notification('DaySignal', { body: 'As notificações estão ativadas!' });
+                this.showNotification('DaySignal', 'As notificações estão ativadas! 🚀');
             }
         } else if (Notification.permission === 'denied') {
             alert('Por favor, ative as notificações nas definições do seu navegador.');
@@ -348,26 +387,70 @@ const app = {
     },
 
     checkNotificationTrigger(pendingCount, fromInterval = false) {
-        if (!('Notification' in window)) return;
+        if (!('serviceWorker' in navigator)) return;
 
         if (Notification.permission === 'granted' && pendingCount > 2) {
             if (fromInterval) {
-                // Interval reminder: Always send if count > 2
-                new Notification('DaySignal (Lembrete)', {
-                    body: `Ainda tens ${pendingCount} tarefas pendentes! Vamos conclui-las? ⏳`,
-                    icon: './android-chrome-192x192.png'
-                });
+                this.showNotification('DaySignal (Lembrete)', `Ainda tens ${pendingCount} tarefas pendentes! Vamos conclui-las? ⏳`);
             } else {
-                // Manual update: Only send if count changed to avoid spam on every render
                 const lastNotify = localStorage.getItem('last_notify_count');
                 if (lastNotify !== pendingCount.toString()) {
-                    new Notification('DaySignal', {
-                        body: `Tens ${pendingCount} tarefas pendentes! Vamos focar? 🚀`,
-                        icon: './android-chrome-192x192.png'
-                    });
+                    this.showNotification('DaySignal', `Tens ${pendingCount} tarefas pendentes! Vamos focar? 🚀`);
                     localStorage.setItem('last_notify_count', pendingCount.toString());
                 }
             }
+        }
+    },
+
+    async testNotification() {
+        if (!window.isSecureContext) {
+            alert('Aviso: As notificações podem não funcionar em ligações não seguras (HTTP). Tente usar localhost ou HTTPS.');
+        }
+
+        if (Notification.permission !== 'granted') {
+            alert('Por favor, ative as notificações primeiro.');
+            return;
+        }
+
+        const originalText = this.testPushBtn.innerText;
+        this.testPushBtn.innerText = 'Enviando...';
+        this.testPushBtn.disabled = true;
+
+        try {
+            await this.showNotification('Teste DaySignal', 'Esta é uma notificação de teste! 🎉');
+            this.testPushBtn.innerText = 'Enviado!';
+            this.testPushBtn.style.color = 'var(--success)';
+        } catch (err) {
+            console.error('Erro ao enviar notificação:', err);
+            this.testPushBtn.innerText = 'Erro!';
+            this.testPushBtn.style.color = 'var(--danger)';
+        }
+
+        setTimeout(() => {
+            this.testPushBtn.innerText = originalText;
+            this.testPushBtn.disabled = false;
+            this.testPushBtn.style.color = '';
+        }, 3000);
+    },
+
+    async showNotification(title, body) {
+        if (!('serviceWorker' in navigator)) {
+            console.error('Service Worker não suportado neste navegador.');
+            return;
+        }
+
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            await registration.showNotification(title, {
+                body: body,
+                icon: './android-chrome-192x192.png',
+                badge: './favicon-32x32.png',
+                vibrate: [100, 50, 100],
+                data: { dateOfArrival: Date.now() }
+            });
+        } catch (err) {
+            console.error('Falha ao mostrar notificação via Service Worker:', err);
+            throw err;
         }
     },
 
@@ -423,12 +506,13 @@ const app = {
                     ${task.text}
                 </span>
                 <div class="task-meta-actions">
+                    <span class="task-date">${this.formatRelativeDate(task.date)}</span>
                     ${(!mini && !isFinalized) ? `
                         <button class="btn-action btn-move-up" onclick="app.moveTaskUp(${task.id})">
                             <i class="fas fa-arrow-up"></i>
                         </button>
                     ` : ''}
-                    ${!mini ? `<button class="btn-action btn-delete" onclick="app.deleteTask(${task.id})"><i class="fas fa-trash"></i></button>` : ''}
+                    ${(!mini && !isFinalized) ? `<button class="btn-action btn-delete" onclick="app.deleteTask(${task.id})"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
             </div>
             ${actionsHtml}
@@ -501,13 +585,24 @@ const app = {
             `;
             grid.appendChild(dayEl);
         }
+    },
+
+    formatRelativeDate(dateStr) {
+        const today = new Date().toISOString().split('T')[0];
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterday = yesterdayDate.toISOString().split('T')[0];
+
+        if (dateStr === today) return 'Hoje';
+        if (dateStr === yesterday) return 'Ontem';
+
+        const date = new Date(dateStr);
+        const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+        return dayName.charAt(0).toUpperCase() + dayName.slice(1).replace('.', '');
     }
 };
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     app.init();
-    // Load theme
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) app.setTheme(savedTheme === 'dark');
 });

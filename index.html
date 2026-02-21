@@ -65,12 +65,15 @@
                     <button id="close-push-prompt" class="btn-close-minimal"><i class="fas fa-times"></i></button>
                 </div>
 
+                <div class="progress-section-header">
+                    <p id="progress-date-badge" class="date-badge"></p>
+                </div>
                 <div class="progress-container">
                     <div class="progress-card">
                         <div class="circle-box">
-                            <svg width="110" height="110">
-                                <circle class="bg" cx="55" cy="55" r="45"></circle>
-                                <circle class="progress done" id="circle-done" cx="55" cy="55" r="45"></circle>
+                            <svg width="80" height="80">
+                                <circle class="bg" cx="40" cy="40" r="34"></circle>
+                                <circle class="progress done" id="circle-done" cx="40" cy="40" r="34"></circle>
                             </svg>
                             <span id="text-done" class="stat-num">0</span>
                         </div>
@@ -78,13 +81,25 @@
                     </div>
                     <div class="progress-card">
                         <div class="circle-box">
-                            <svg width="110" height="110">
-                                <circle class="bg" cx="55" cy="55" r="45"></circle>
-                                <circle class="progress failed" id="circle-failed" cx="55" cy="55" r="45"></circle>
+                            <svg width="80" height="80">
+                                <circle class="bg" cx="40" cy="40" r="34"></circle>
+                                <circle class="progress pending" id="circle-pending" cx="40" cy="40" r="34"></circle>
+                            </svg>
+                            <span id="text-pending" class="stat-num">0</span>
+                        </div>
+                        <span class="stat-label">Pendentes</span>
+                    </div>
+                    <div class="progress-card">
+                        <div class="circle-box">
+                            <svg width="80" height="80">
+                                <circle class="bg" cx="40" cy="40" r="34"></circle>
+                                <circle class="progress failed" id="circle-failed" cx="40" cy="40" r="34"></circle>
                             </svg>
                             <span id="text-failed" class="stat-num">0</span>
                         </div>
-                        <span class="stat-label">Não Concluídas</span>
+
+                        <span class="stat-label">Falhas</span>
+
                     </div>
                 </div>
                 <div class="recent-tasks">
@@ -131,7 +146,11 @@
                     </div>
                     <div class="settings-item">
                         <span>Notificações Web Push</span>
-                        <button id="push-toggle" class="btn-secondary">Ativar</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="test-push" class="btn-secondary"
+                                style="padding: 6px 12px; font-size: 0.75rem;">Testar</button>
+                            <button id="push-toggle" class="btn-secondary">Ativar</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -161,7 +180,7 @@
         <div id="task-modal" class="modal">
             <div class="modal-content">
                 <h3>Nova Tarefa</h3>
-                <input type="text" id="task-input" placeholder="O que precisa ser feito?">
+                <input type="text" id="task-input" placeholder="O que vais conquistar hoje?" maxlength="75">
                 <div class="modal-buttons">
                     <button id="cancel-task">Cancelar</button>
                     <button id="save-task" class="btn-primary">Adicionar</button>

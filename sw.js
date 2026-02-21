@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tasks-pwa-v5';
+const CACHE_NAME = 'tasks-pwa-v16';
 const ASSETS = [
     './',
     './index.html',
@@ -8,7 +8,8 @@ const ASSETS = [
     './favicon.ico',
     './favicon-16x16.png',
     './favicon-32x32.png',
-    './apple-touch-icon.png'
+    './apple-touch-icon.png',
+    './android-chrome-192x192.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -124,28 +124,62 @@ main {
 }
 
 /* Progress Circles Section */
+.progress-section-header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.date-badge {
+    background: var(--card-bg);
+    color: var(--primary);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 107, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+[data-theme="dark"] .date-badge {
+    border-color: rgba(255, 107, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 .progress-container {
     display: flex;
-    gap: 16px;
+    gap: 8px;
+    /* Reduced from 16px to fit 3 cards better */
     margin-bottom: 24px;
+    overflow-x: auto;
+    /* Allow horizontal scroll on very small screens */
+    padding-bottom: 8px;
 }
 
 .progress-card {
     flex: 1;
     background: var(--card-bg);
-    padding: 24px 16px;
+    padding: 16px 8px;
+    /* Reduced from 24px 16px */
     border-radius: 24px;
     text-align: center;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
+    /* Reduced gap */
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     border: 1px solid rgba(0, 0, 0, 0.02);
     cursor: default;
+    min-width: 90px;
 }
 
 [data-theme="dark"] .progress-card {
@@ -180,6 +214,10 @@ main {
     pointer-events: none;
 }
 
+.progress-card:nth-child(3)::before {
+    background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+}
+
 .progress-card:nth-child(2)::before {
     background: radial-gradient(circle, var(--danger) 0%, transparent 70%);
 }
@@ -197,8 +235,10 @@ main {
 
 .circle-box {
     position: relative;
-    width: 110px;
-    height: 110px;
+    width: 80px;
+    /* Reduced from 110px */
+    height: 80px;
+    /* Reduced from 110px */
     z-index: 1;
     display: flex;
     align-items: center;
@@ -235,8 +275,8 @@ main {
 }
 
 .circle-box .progress {
-    stroke-dasharray: 282.7;
-    stroke-dashoffset: 282.7;
+    stroke-dasharray: 213.6;
+    stroke-dashoffset: 213.6;
     transition: stroke-dashoffset 1s cubic-bezier(0.25, 1, 0.5, 1), stroke 0.3s ease;
 }
 
@@ -251,9 +291,15 @@ main {
     filter: drop-shadow(0 0 4px rgba(255, 94, 87, 0.4));
 }
 
+.circle-box .progress.pending {
+    stroke: var(--accent);
+    filter: drop-shadow(0 0 4px rgba(95, 39, 205, 0.4));
+}
+
 .stat-num {
     position: absolute;
-    font-size: 2rem;
+    font-size: 1.4rem;
+    /* Reduced from 2rem */
     font-weight: 800;
     letter-spacing: -1px;
     color: var(--text-main);
@@ -266,13 +312,16 @@ main {
 }
 
 .stat-label {
-    font-size: 0.85rem;
+    font-size: 0.65rem;
+    /* Reduced from 0.75rem */
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     z-index: 1;
     transition: color 0.3s ease;
+    white-space: nowrap;
+    /* Prevent line breaks */
 }
 
 .progress-card:hover .stat-label {
@@ -342,6 +391,21 @@ main {
     margin-left: auto;
 }
 
+/* Task Item Date */
+.task-date {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-light);
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+[data-theme="dark"] .task-date {
+    background: rgba(255, 255, 255, 0.05);
+}
+
 /* Push Settings */
 #push-toggle {
     margin-left: auto;
@@ -369,14 +433,21 @@ main {
 
 .task-content {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    /* Changed from center to accommodate wrapping better */
     gap: 12px;
+    flex-wrap: wrap;
+    /* Allow meta-actions to wrap if needed */
 }
 
 .task-text {
     flex: 1;
     font-size: 1rem;
     font-weight: 500;
+    min-width: 0;
+    /* Important for flex-shrink and word-break to work */
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .task-item.completed {
