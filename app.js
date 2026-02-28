@@ -634,35 +634,43 @@ const app = {
                     pending: dayTasks.filter(t => t.status === 'pending').length
                 };
 
+                const isToday = date === todayStr;
+                const isTomorrow = date === tomorrowStr;
+                const isHistory = !isToday && !isTomorrow;
+
                 const groupDiv = document.createElement('div');
-                const isTomorrowGroup = date === new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0];
-                groupDiv.className = `date-group ${isTomorrowGroup ? 'is-tomorrow-group' : ''}`;
+                groupDiv.className = `date-group ${isTomorrow ? 'is-tomorrow-group' : ''} ${isHistory ? 'is-history-group' : 'is-expanded'}`;
+                groupDiv.dataset.date = date;
 
                 const headerDiv = document.createElement('div');
-                headerDiv.className = 'date-group-header';
+                headerDiv.className = `date-group-header ${isHistory ? 'clickable-header' : ''}`;
 
                 let dateLabel = this.formatDateLabel(date);
-                if (dateLabel.length <= 3) {
-                    // It's a short weekday like "Sáb", let's make it more formal if needed or keep it
-                }
 
                 headerDiv.innerHTML = `
-                    <span class="date-group-title">${dateLabel}</span>
+                    <div class="header-main-info">
+                        <span class="date-group-title">${dateLabel}</span>
+                        ${isHistory ? `<i class="fas fa-chevron-down expand-icon"></i>` : ''}
+                    </div>
                     <div class="date-group-stats">
                         <span class="stat-pill"><i class="fas fa-list"></i> ${stats.total}</span>
                         <span class="stat-pill done"><i class="fas fa-check"></i> ${stats.done}</span>
                         <span class="stat-pill failed"><i class="fas fa-xmark"></i> ${stats.failed}</span>
-                        <span class="stat-pill pending"><i class="fas fa-clock"></i> ${stats.pending}</span>
+                        ${stats.pending > 0 ? `<span class="stat-pill pending"><i class="fas fa-clock"></i> ${stats.pending}</span>` : ''}
                     </div>
                 `;
+
+                if (isHistory) {
+                    headerDiv.addEventListener('click', () => {
+                        groupDiv.classList.toggle('is-expanded');
+                    });
+                }
 
                 groupDiv.appendChild(headerDiv);
 
                 const listDiv = document.createElement('div');
-                listDiv.className = 'tasks-mini-list'; // Reusing mini-list styles for container
+                listDiv.className = 'tasks-mini-list date-group-tasks';
 
-                // Sub-sort: pending first, then others? 
-                // The user said "ir para o final da fila", so we use the unshift logic + reverse
                 [...dayTasks].reverse().forEach(t => {
                     listDiv.appendChild(this.createTaskElement(t));
                 });

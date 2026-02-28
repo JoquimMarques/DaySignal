@@ -184,7 +184,7 @@ main {
 /* Cards & Components */
 /* Welcome Card Redesign */
 .welcome-card {
-    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    background: linear-gradient(135deg, #000000 0%, #7b3002 100%);
     color: white;
     padding: 32px 24px;
     border-radius: 30px;
@@ -197,8 +197,8 @@ main {
 }
 
 [data-theme="dark"] .welcome-card {
-    background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
-    border: 1px solid rgba(255, 107, 0, 0.05);
+    background: linear-gradient(135deg, #000000 0%, #a14f02 100%);
+    border: 1px solid rgba(255, 106, 0, 0.116);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
@@ -562,32 +562,92 @@ main {
 }
 
 .date-group-header {
-    margin-bottom: 12px;
-    padding: 0 4px;
+    margin-bottom: 8px;
+    padding: 12px 16px;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.clickable-header {
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .clickable-header {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.clickable-header:hover {
+    background: rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+}
+
+[data-theme="dark"] .clickable-header:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.header-main-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.expand-icon {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: transform 0.3s ease;
+}
+
+.is-expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+.date-group-tasks {
+    display: none;
+    margin-top: 12px;
+    animation: fadeIn 0.3s ease;
+}
+
+.is-expanded .date-group-tasks {
+    display: flex;
+    flex-direction: column;
+}
+
+/* History Specific */
+.is-history-group {
+    margin-bottom: 16px;
 }
 
 .date-group-title {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--text-main);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    display: block;
-    margin-bottom: 6px;
 }
 
 .date-group-stats {
     display: flex;
     gap: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.75rem;
+    font-weight: 700;
 }
 
 .stat-pill {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     color: var(--text-muted);
+    background: rgba(0, 0, 0, 0.03);
+    padding: 4px 10px;
+    border-radius: 10px;
+}
+
+[data-theme="dark"] .stat-pill {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .stat-pill.done {
