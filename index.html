@@ -40,7 +40,8 @@
         <header class="header">
             <h1 id="screen-title">DaySignal</h1>
             <div class="header-actions">
-                <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+                <button id="theme-toggle" title="Alternar Tema"><i class="fas fa-moon"></i></button>
+                <button class="nav-item" data-screen="settings" title="Ajustes"><i class="fas fa-gear"></i></button>
             </div>
         </header>
 
@@ -49,8 +50,10 @@
             <!-- Home Screen -->
             <section id="screen-home" class="screen active">
                 <div class="welcome-card">
-                    <h2>Olá! Pronto para o foco?</h2>
-                    <p id="today-stats">Carregando seus objetivos...</p>
+                    <h2 class="welcome-title">Olá! Pronto para Hoje!?</h2>
+                    <p id="motivation-banner" class="welcome-subtitle">Tudo o que precisas é de um plano e coragem para
+                        seguir em frente.</p>
+                    <div id="today-stats" class="status-message"></div>
                 </div>
 
                 <div id="push-prompt" class="push-prompt-card" style="display: none;">
@@ -69,6 +72,7 @@
                     <p id="progress-date-badge" class="date-badge"></p>
                 </div>
                 <div class="progress-container">
+                    <!-- Existing Circles -->
                     <div class="progress-card">
                         <div class="circle-box">
                             <svg width="80" height="80">
@@ -97,11 +101,21 @@
                             </svg>
                             <span id="text-failed" class="stat-num">0</span>
                         </div>
-
                         <span class="stat-label">Falhas</span>
-
                     </div>
                 </div>
+
+                <!-- Goals Progress Bar - Moved Higher -->
+                <div id="goals-progress-container" class="goals-progress-container">
+                    <div class="goals-progress-header">
+                        <span>Minhas Metas</span>
+                        <span id="goals-progress-percent">0%</span>
+                    </div>
+                    <div class="goals-progress-bar-bg">
+                        <div id="goals-progress-fill" class="goals-progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
                 <div class="recent-tasks">
                     <div class="section-header">
                         <h3>Últimas Tarefas</h3>
@@ -116,18 +130,35 @@
             <!-- Tasks Screen -->
             <section id="screen-tasks" class="screen">
                 <div class="tasks-header">
-                    <h2>Minhas Tarefas</h2>
-                    <button id="add-task-btn" class="fab-inline"><i class="fas fa-plus"></i></button>
+
+                    <div class="tasks-header-actions" style="display: flex; gap: 8px;">
+                        <button id="add-task-btn" class="fab-inline" title="Nova Tarefa"><i
+                                class="fas fa-plus"></i></button>
+                    </div>
                 </div>
+
                 <div id="full-tasks-list" class="tasks-list">
                     <!-- Tasks will be injected here -->
                 </div>
             </section>
 
+            <!-- Goals Screen [NEW] -->
+            <section id="screen-goals" class="screen">
+                <div class="tasks-header">
+                    <div class="tasks-header-actions" style="display: flex; gap: 8px;">
+                        <button id="add-goal-btn" class="fab-inline btn-goal-plus" title="Nova Meta"><i
+                                class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <div id="active-goals-list" class="goals-list">
+                    <!-- Goals will be injected here -->
+                </div>
+            </section>
+
             <!-- Calendar Screen -->
             <section id="screen-calendar" class="screen">
-                <h2>Acompanhamento</h2>
-                <div id="calendar-view" class="calendar-container">
+                <div id="calendar-view">
                     <!-- Calendar will be injected here -->
                 </div>
             </section>
@@ -166,24 +197,46 @@
                 <i class="fas fa-list-check"></i>
                 <span>Tarefas</span>
             </button>
+            <button class="nav-item" data-screen="goals">
+                <i class="fas fa-bullseye"></i>
+                <span>Metas</span>
+            </button>
             <button class="nav-item" data-screen="calendar">
                 <i class="fas fa-calendar-days"></i>
                 <span>Calendário</span>
             </button>
-            <button class="nav-item" data-screen="settings">
-                <i class="fas fa-gear"></i>
-                <span>Ajustes</span>
-            </button>
+
         </nav>
 
         <!-- Add Task Modal -->
         <div id="task-modal" class="modal">
             <div class="modal-content">
                 <h3>Nova Tarefa</h3>
-                <input type="text" id="task-input" placeholder="O que vais conquistar hoje?" maxlength="75">
+                <input type="text" id="task-input" placeholder="O que vais conquistar?" maxlength="75">
+
+                <div class="task-date-selector">
+                    <button class="date-chip active" data-date="today">Hoje</button>
+                    <button class="date-chip" data-date="tomorrow">Amanhã</button>
+                </div>
                 <div class="modal-buttons">
                     <button id="cancel-task">Cancelar</button>
                     <button id="save-task" class="btn-primary">Adicionar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="goal-modal" class="modal">
+            <div class="modal-content goal-modal-premium">
+                <div class="modal-header-premium">
+                    <h3>Nova Meta</h3>
+                </div>
+
+                <input type="text" id="goal-input" placeholder="O que vais conquistar?" maxlength="50"
+                    autocomplete="off">
+
+                <div class="modal-buttons-premium">
+                    <button id="cancel-goal" class="btn-cancel-premium">Cancelar</button>
+                    <button id="save-goal" class="btn-save-premium">Criar</button>
                 </div>
             </div>
         </div>

@@ -4,6 +4,7 @@
 
 const app = {
     tasks: JSON.parse(localStorage.getItem('tasks')) || [],
+    goals: JSON.parse(localStorage.getItem('goals')) || [],
     currentScreen: 'home',
 
     init() {
@@ -35,6 +36,15 @@ const app = {
         this.closePushPrompt = document.getElementById('close-push-prompt');
         this.progressDateBadge = document.getElementById('progress-date-badge');
         this.testPushBtn = document.getElementById('test-push');
+        this.motivationBanner = document.getElementById('motivation-banner');
+        this.taskDateChips = document.querySelectorAll('.task-date-selector .date-chip');
+
+        // Goals DOM
+        this.goalModal = document.getElementById('goal-modal');
+        this.goalInput = document.getElementById('goal-input');
+        this.goalsListContainer = document.getElementById('active-goals-list');
+        this.goalsProgressFill = document.getElementById('goals-progress-fill');
+        this.goalsProgressPercent = document.getElementById('goals-progress-percent');
     },
 
     bindEvents() {
@@ -50,6 +60,14 @@ const app = {
         document.getElementById('add-task-btn').addEventListener('click', () => this.toggleModal(true));
         document.getElementById('cancel-task').addEventListener('click', () => this.toggleModal(false));
         document.getElementById('save-task').addEventListener('click', () => this.addTask());
+
+        // Task Date Selector
+        this.taskDateChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                this.taskDateChips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            });
+        });
 
         // Theme
         this.themeToggle.addEventListener('click', () => this.toggleTheme());
@@ -80,9 +98,19 @@ const app = {
 
         if (this.testPushBtn) this.testPushBtn.addEventListener('click', () => this.testNotification());
 
+        // Goal Logic
+        document.getElementById('add-goal-btn').addEventListener('click', () => this.toggleGoalModal(true));
+        document.getElementById('cancel-goal').addEventListener('click', () => this.toggleGoalModal(false));
+        document.getElementById('save-goal').addEventListener('click', () => this.addGoal());
+
+
+
         // Close modal on outside click
         this.modal.addEventListener('click', (e) => {
             if (e.target === this.modal) this.toggleModal(false);
+        });
+        this.goalModal.addEventListener('click', (e) => {
+            if (e.target === this.goalModal) this.toggleGoalModal(false);
         });
     },
 
@@ -99,10 +127,11 @@ const app = {
         const titles = {
             'home': 'Início',
             'tasks': 'Minhas Tarefas',
-            'calendar': 'Calendário',
-            'settings': 'Ajustes'
+            'calendar': 'Relatórios',
+            'settings': 'Ajustes',
+            'goals': 'Minhas Metas'
         };
-        this.screenTitle.innerText = titles[screenId];
+        this.screenTitle.innerText = titles[screenId] || 'DaySignal';
 
         this.render();
     },
@@ -118,11 +147,20 @@ const app = {
             return;
         }
 
+        const activeChip = document.querySelector('.task-date-selector .date-chip.active');
+        const selection = activeChip ? activeChip.dataset.date : 'today';
+
+        let targetDate = new Date();
+        if (selection === 'tomorrow') {
+            targetDate.setDate(targetDate.getDate() + 1);
+        }
+        const dateStr = targetDate.toISOString().split('T')[0];
+
         const newTask = {
             id: Date.now(),
             text: taskText,
             status: 'pending', // pending, completed, failed
-            date: new Date().toISOString().split('T')[0]
+            date: dateStr
         };
 
         this.tasks.push(newTask);
@@ -134,9 +172,15 @@ const app = {
     },
 
     updateTaskStatus(id, status) {
-        const task = this.tasks.find(t => t.id === id);
-        if (task && task.status === 'pending') {
+        const taskIndex = this.tasks.findIndex(t => t.id === id);
+        if (taskIndex !== -1 && this.tasks[taskIndex].status === 'pending') {
+            const task = this.tasks[taskIndex];
             task.status = status;
+
+            // Move to "final da fila" (beginning of array since we reverse)
+            this.tasks.splice(taskIndex, 1);
+            this.tasks.unshift(task);
+
             this.save();
             this.render();
             this.updateStats();
@@ -180,6 +224,60 @@ const app = {
 
     save() {
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
+        localStorage.setItem('goals', JSON.stringify(this.goals));
+    },
+
+    // Goal Methods
+    toggleGoalModal(show) {
+        this.goalModal.classList.toggle('active', show);
+        if (show) this.goalInput.focus();
+    },
+
+    addGoal() {
+        const text = this.goalInput.value.trim();
+        const type = 'daily';
+
+        if (!text) return;
+
+        const newGoal = {
+            id: Date.now(),
+            text: text,
+            type: type,
+            status: 'pending', // pending, completed, failed
+            date: new Date().toISOString().split('T')[0]
+        };
+
+        this.goals.push(newGoal);
+        this.save();
+        this.goalInput.value = '';
+        this.toggleGoalModal(false);
+        this.render();
+        this.updateStats();
+    },
+
+    updateGoalStatus(id, status) {
+        const goalIndex = this.goals.findIndex(g => g.id === id);
+        if (goalIndex !== -1 && this.goals[goalIndex].status === 'pending') {
+            const goal = this.goals[goalIndex];
+            goal.status = status;
+
+            // Move to "final da fila" (beginning of array since we reverse)
+            this.goals.splice(goalIndex, 1);
+            this.goals.unshift(goal);
+
+            this.save();
+            this.render();
+            this.updateStats();
+        }
+    },
+
+    deleteGoal(id) {
+        if (confirm('Eliminar esta meta?')) {
+            this.goals = this.goals.filter(g => g.id !== id);
+            this.save();
+            this.render();
+            this.updateStats();
+        }
     },
 
     updateStats() {
@@ -193,8 +291,10 @@ const app = {
             const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
             // Capitalize first letter and handle "Hoje"
             const label = dayName.charAt(0).toUpperCase() + dayName.slice(1).split('-')[0];
-            this.progressDateBadge.innerText = `Resumo de Hoje • ${label}`;
+            this.progressDateBadge.innerText = `O Teu Ritmo de ${label}`;
         }
+
+        this.updateMotivationBanner();
 
         let completedCount = 0;
         let pendingCount = 0;
@@ -216,6 +316,26 @@ const app = {
 
         // Dynamic Phrase
         this.updateDynamicPhrase(percent, todayTasks.length);
+
+        // Goals Stats
+        this.updateGoalsStats();
+    },
+
+    updateGoalsStats() {
+        if (!this.goalsProgressFill) return;
+
+        if (this.goals.length === 0) {
+            document.getElementById('goals-progress-container').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('goals-progress-container').style.display = 'block';
+        const total = this.goals.length;
+        const completed = this.goals.filter(g => g.status === 'completed').length;
+        const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        this.goalsProgressFill.style.width = `${percent}%`;
+        this.goalsProgressPercent.innerText = `${percent}%`;
     },
 
     updateProgressCircles(done, failed, pending, total) {
@@ -255,34 +375,34 @@ const app = {
 
         const phrases = {
             empty: [
-                "O dia está à tua espera! Que tal começar com uma pequena meta? ✨",
-                "Folha em branco... vamos escrever algo produtivo hoje? ✍️",
-                "Pronto para dar o primeiro passo? Adiciona a tua primeira tarefa! 🚀"
+                "O dia está à tua espera! Que tal começar com uma pequena meta?",
+                "Folha em branco... vamos escrever algo produtivo hoje?",
+                "Pronto para dar o primeiro passo? Adiciona a tua primeira tarefa!"
             ],
             zero: [
-                "Ainda não começaste? Não faz mal, o importante é começar agora! 💪",
-                "Sinto-me um pouco triste por não termos concluído nada ainda... mas acredito em ti! ❤️",
-                "Vamos lá dar vida a esta lista? Só precisas de um pequeno impulso! 🔥"
+                "Ainda não começaste? Não faz mal, o importante é começar agora!",
+                "Sinto-me um pouco triste por não termos concluído nada ainda... mas acredito em ti!",
+                "Vamos lá dar vida a esta lista? Só precisas de um pequeno impulso!"
             ],
             started: [
-                "Bom começo! O motor já aqueceu, continua assim! ⚙️",
-                "Um passo de cada vez e chegamos lá. Força nisso! 🧗",
-                "Já tens movimento! Não pares agora, estás no caminho certo. 🌟"
+                "Bom começo! O motor já aqueceu, continua assim!",
+                "Um passo de cada vez e chegamos lá. Força nisso!",
+                "Já tens movimento! Não pares agora, estás no caminho certo."
             ],
             half: [
-                "Já vais a meio caminho! Estás a dominar o dia hoje! 😎",
-                "Metade já está! O resto vai ser num piscar de olhos. ✨",
-                "Excelente progresso! Estás mais perto do fim do que do início. 🏁"
+                "Já vais a meio caminho! Estás a dominar o dia hoje!",
+                "Metade já está! O resto vai ser num piscar de olhos.",
+                "Excelente progresso! Estás mais perto do fim do que do início."
             ],
             almost: [
-                "Quase lá! Só mais um último esforço para a glória! 🏆",
-                "Vê só o quanto já fizeste... falta tão pouco! ⚡",
-                "Estás imparável! Termina isso e celebra o teu sucesso. 🎇"
+                "Quase lá! Só mais um último esforço para a glória!",
+                "Vê só o quanto já fizeste... falta tão pouco!",
+                "Estás imparável! Termina isso e celebra o teu sucesso."
             ],
             done: [
-                "INCRÍVEL! Completaste tudo! Agora descansa, tu mereces! 🎉",
-                "Missão Cumprida! O teu eu de amanhã agradece o esforço de hoje. 🔥",
-                "Perfeição! Limpaste a lista... que sensação maravilhosa, não é? 🌈"
+                "INCRÍVEL! Completaste tudo! Agora descansa, tu mereces!",
+                "Missão Cumprida! O teu eu de amanhã agradece o esforço de hoje.",
+                "Perfeição! Limpaste a lista... que sensação maravilhosa, não é?"
             ]
         };
 
@@ -292,7 +412,7 @@ const app = {
         if (total === 0) {
             phrase = getRandom(phrases.empty);
         } else if (percent === 0) {
-            phrase = getRandom(phrases.zero);
+            phrase = "Sinto-me um pouco triste por não termos concluído nada ainda... mas acredito em ti!";
         } else if (percent < 40) {
             phrase = getRandom(phrases.started);
         } else if (percent < 75) {
@@ -304,6 +424,30 @@ const app = {
         }
 
         phraseContainer.innerText = phrase;
+    },
+
+    updateMotivationBanner() {
+        if (!this.motivationBanner) return;
+
+        const motivationPhrases = [
+            "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
+            "Não pares até estares orgulhoso de ti mesmo.",
+            "Foca no progresso, não na perfeição.",
+            "A tua única competição é quem eras ontem.",
+            "Grandes coisas nunca vêm de zonas de conforto.",
+            "Tudo o que precisas é de um plano e coragem para seguir em frente.",
+            "A disciplina é a ponte entre metas e realizações.",
+            "Faz hoje o que o teu eu de amanhã vai agradecer.",
+            "Acredita que podes e já estás a meio caminho.",
+            "O segredo de avançar é começar."
+        ];
+
+        // Change motivation once per session or on render?
+        // Let's pick a random one if empty or just occasionally
+        if (!this.motivationBanner.innerText || this.motivationBanner.innerText === "Tudo o que precisas é de um plano e coragem para seguir em frente.") {
+            // Priority to the requested phrase
+            this.motivationBanner.innerText = "Tudo o que precisas é de um plano e coragem para seguir em frente.";
+        }
     },
 
     initTheme() {
@@ -370,7 +514,7 @@ const app = {
             const permission = await Notification.requestPermission();
             this.updatePushUI();
             if (permission === 'granted') {
-                this.showNotification('DaySignal', 'As notificações estão ativadas! 🚀');
+                this.showNotification('DaySignal', 'As notificacoes estao ativadas');
             }
         } else if (Notification.permission === 'denied') {
             alert('Por favor, ative as notificações nas definições do seu navegador.');
@@ -378,12 +522,14 @@ const app = {
     },
 
     startNotificationInterval() {
-        // Run every 2 minutes (120,000 ms)
+        // Run every 5 minutes (300,000 ms)
         setInterval(() => {
             const today = new Date().toISOString().split('T')[0];
             const pendingTasks = this.tasks.filter(t => !t.archived && t.date === today && t.status === 'pending');
-            this.checkNotificationTrigger(pendingTasks.length, true);
-        }, 120000);
+            const pendingGoals = this.goals.filter(g => g.date === today && g.status === 'pending');
+            const totalPending = pendingTasks.length + pendingGoals.length;
+            this.checkNotificationTrigger(totalPending, true);
+        }, 300000);
     },
 
     checkNotificationTrigger(pendingCount, fromInterval = false) {
@@ -391,11 +537,11 @@ const app = {
 
         if (Notification.permission === 'granted' && pendingCount > 2) {
             if (fromInterval) {
-                this.showNotification('DaySignal (Lembrete)', `Ainda tens ${pendingCount} tarefas pendentes! Vamos conclui-las? ⏳`);
+                this.showNotification('DaySignal (Lembrete)', `Ainda tens ${pendingCount} tarefas pendentes. Vamos conclui-las?`);
             } else {
                 const lastNotify = localStorage.getItem('last_notify_count');
                 if (lastNotify !== pendingCount.toString()) {
-                    this.showNotification('DaySignal', `Tens ${pendingCount} tarefas pendentes! Vamos focar? 🚀`);
+                    this.showNotification('DaySignal', `Tens ${pendingCount} tarefas pendentes. Vamos focar?`);
                     localStorage.setItem('last_notify_count', pendingCount.toString());
                 }
             }
@@ -417,7 +563,7 @@ const app = {
         this.testPushBtn.disabled = true;
 
         try {
-            await this.showNotification('Teste DaySignal', 'Esta é uma notificação de teste! 🎉');
+            await this.showNotification('Teste DaySignal', 'Esta e uma notificacao de teste');
             this.testPushBtn.innerText = 'Enviado!';
             this.testPushBtn.style.color = 'var(--success)';
         } catch (err) {
@@ -463,56 +609,204 @@ const app = {
         this.homeList.innerHTML = recent.length ? '' : '<p class="text-muted">Nenhuma tarefa recente.</p>';
         recent.forEach(t => this.homeList.appendChild(this.createTaskElement(t, true)));
 
-        // Full List
-        this.fullList.innerHTML = activeTasks.length ? '' : '<p class="text-muted">Tudo limpo por aqui! Adicione uma tarefa.</p>';
-        // Sort by date then status? Let's just do reverse chronological
-        [...activeTasks].reverse().forEach(t => this.fullList.appendChild(this.createTaskElement(t)));
+        // Full List - Grouped by Date
+        this.fullList.innerHTML = '';
+        if (activeTasks.length === 0) {
+            this.fullList.innerHTML = '<p class="text-muted">Tudo limpo por aqui! Adicione uma tarefa.</p>';
+        } else {
+            const groups = this.groupItemsByDate(activeTasks);
+            const todayStr = new Date().toISOString().split('T')[0];
+            const tomorrowStr = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0];
+
+            const sortedDates = Object.keys(groups).sort((a, b) => {
+                if (a === todayStr) return -1;
+                if (b === todayStr) return 1;
+                if (a === tomorrowStr) return -1;
+                if (b === tomorrowStr) return 1;
+                return b.localeCompare(a);
+            });
+            sortedDates.forEach(date => {
+                const dayTasks = groups[date];
+                const stats = {
+                    total: dayTasks.length,
+                    done: dayTasks.filter(t => t.status === 'completed').length,
+                    failed: dayTasks.filter(t => t.status === 'failed').length,
+                    pending: dayTasks.filter(t => t.status === 'pending').length
+                };
+
+                const groupDiv = document.createElement('div');
+                const isTomorrowGroup = date === new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0];
+                groupDiv.className = `date-group ${isTomorrowGroup ? 'is-tomorrow-group' : ''}`;
+
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'date-group-header';
+
+                let dateLabel = this.formatDateLabel(date);
+                if (dateLabel.length <= 3) {
+                    // It's a short weekday like "Sáb", let's make it more formal if needed or keep it
+                }
+
+                headerDiv.innerHTML = `
+                    <span class="date-group-title">${dateLabel}</span>
+                    <div class="date-group-stats">
+                        <span class="stat-pill"><i class="fas fa-list"></i> ${stats.total}</span>
+                        <span class="stat-pill done"><i class="fas fa-check"></i> ${stats.done}</span>
+                        <span class="stat-pill failed"><i class="fas fa-xmark"></i> ${stats.failed}</span>
+                        <span class="stat-pill pending"><i class="fas fa-clock"></i> ${stats.pending}</span>
+                    </div>
+                `;
+
+                groupDiv.appendChild(headerDiv);
+
+                const listDiv = document.createElement('div');
+                listDiv.className = 'tasks-mini-list'; // Reusing mini-list styles for container
+
+                // Sub-sort: pending first, then others? 
+                // The user said "ir para o final da fila", so we use the unshift logic + reverse
+                [...dayTasks].reverse().forEach(t => {
+                    listDiv.appendChild(this.createTaskElement(t));
+                });
+
+                groupDiv.appendChild(listDiv);
+                this.fullList.appendChild(groupDiv);
+            });
+        }
+
+        // Render Goals in Tasks Screen
+        this.renderGoals();
 
         // Calendar
         if (this.currentScreen === 'calendar') this.renderCalendar();
     },
 
-    createTaskElement(task, mini = false) {
+    renderGoals() {
+        if (!this.goalsListContainer) return;
+
+        if (this.goals.length === 0) {
+            this.goalsListContainer.innerHTML = '<div class="empty-state"><p>Ainda não tens metas definidas. Clica no + para começar!</p></div>';
+            return;
+        }
+
+        this.goalsListContainer.innerHTML = '';
+
+        // Group goals by date (same logic as tasks)
+        const groupedGoals = this.groupItemsByDate(this.goals);
+
+        // Sort dates descending
+        const sortedDates = Object.keys(groupedGoals).sort((a, b) => b.localeCompare(a));
+
+        sortedDates.forEach(date => {
+            // Add date header
+            const header = document.createElement('div');
+            header.className = 'task-date-header'; // Reusing task header style for consistency
+            header.innerHTML = `<span>${this.formatDateLabel(date)}</span>`;
+            this.goalsListContainer.appendChild(header);
+
+            // Container for goals of this date
+            const dayContainer = document.createElement('div');
+            dayContainer.className = 'day-items-container';
+
+            groupedGoals[date].reverse().forEach(goal => {
+                // Auto-fail logic: if date is in the past and status is pending, it's failed
+                const today = new Date().toISOString().split('T')[0];
+                if (date < today && goal.status === 'pending') {
+                    goal.status = 'failed';
+                    this.save();
+                }
+                dayContainer.appendChild(this.createGoalElement(goal));
+            });
+
+            this.goalsListContainer.appendChild(dayContainer);
+        });
+    },
+
+    createGoalElement(goal) {
         const div = document.createElement('div');
-        const isFinalized = task.status !== 'pending';
-        div.className = `task-item ${task.status === 'completed' ? 'completed' : ''} ${task.status === 'failed' ? 'not-completed' : ''}`;
+        const isFinalized = goal.status !== 'pending';
+        div.className = `goal-card-premium ${goal.status === 'completed' ? 'completed' : ''} ${goal.status === 'failed' ? 'not-completed' : ''}`;
+
+        let statusIcon = '';
+        if (goal.status === 'completed') statusIcon = '<i class="fas fa-check-circle success"></i>';
+        else if (goal.status === 'failed') statusIcon = '<i class="fas fa-times-circle danger"></i>';
+
+        div.innerHTML = `
+            <div class="goal-card-main">
+                <div class="goal-info">
+                    <h4 class="goal-title">${goal.text}</h4>
+                </div>
+                <div class="goal-status-display">
+                    ${statusIcon}
+                </div>
+            </div>
+            <div class="goal-controls">
+                ${!isFinalized ? `
+                    <button class="btn-goal-success-small" onclick="app.updateGoalStatus(${goal.id}, 'completed')" title="Concluir">
+                        <i class="fas fa-check"></i>
+                    </button>
+                ` : ''}
+                <button class="btn-goal-delete-small" onclick="app.deleteGoal(${goal.id})" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+
+        return div;
+    },
+
+    createTaskElement(item, mini = false, isGoal = false) {
+        const div = document.createElement('div');
+        const isFinalized = item.status !== 'pending';
+        const goalTypeClass = isGoal ? `goal-${item.type}` : '';
+        div.className = `task-item ${isGoal ? 'goal-style' : ''} ${goalTypeClass} ${item.status === 'completed' ? 'completed' : ''} ${item.status === 'failed' ? 'not-completed' : ''}`;
+
+        const today = new Date().toISOString().split('T')[0];
+        const isFuture = item.date > today;
 
         let actionsHtml = '';
         if (isFinalized) {
-            const statusClass = task.status === 'completed' ? 'btn-status-done' : 'btn-status-failed';
+            const statusClass = item.status === 'completed' ? 'btn-status-done' : 'btn-status-failed';
             actionsHtml = `
                 <div class="task-actions">
-                    <button class="btn-action btn-delete ${statusClass}" style="width: 100%" onclick="app.deleteTask(${task.id})">
+                    <button class="btn-action btn-delete ${statusClass}" style="width: 100%" onclick="app.${isGoal ? 'deleteGoal' : 'deleteTask'}(${item.id})">
                         <i class="fas fa-trash"></i> Eliminar
                     </button>
+                </div>
+            `;
+        } else if (isFuture && !isGoal) {
+            // No completion buttons for future tasks
+            actionsHtml = `
+                <div class="task-actions">
+                    <p class="text-mini-info"><i class="fas fa-lock"></i> Disponível em breve</p>
                 </div>
             `;
         } else {
             actionsHtml = `
                 <div class="task-actions">
-                    <button class="btn-action btn-done" onclick="app.updateTaskStatus(${task.id}, 'completed')">
+                    <button class="btn-action btn-done" onclick="app.${isGoal ? 'updateGoalStatus' : 'updateTaskStatus'}(${item.id}, 'completed')">
                         <i class="fas fa-check"></i> Concluir
                     </button>
-                    <button class="btn-action btn-todo" onclick="app.updateTaskStatus(${task.id}, 'failed')">
+                    <button class="btn-action btn-todo" onclick="app.${isGoal ? 'updateGoalStatus' : 'updateTaskStatus'}(${item.id}, 'failed')">
                         <i class="fas fa-xmark"></i> Não Concluir
                     </button>
                 </div>
             `;
         }
 
+        const typeLabel = (isGoal && item.type) ? `<span class="goal-type-badge">${item.type === 'daily' ? 'Diária' : 'Semanal'}</span>` : '';
+
         div.innerHTML = `
             <div class="task-content">
                 <span class="task-text">
-                    ${task.text}
+                    ${typeLabel} ${item.text}
                 </span>
                 <div class="task-meta-actions">
-                    <span class="task-date">${this.formatRelativeDate(task.date)}</span>
-                    ${(!mini && !isFinalized) ? `
-                        <button class="btn-action btn-move-up" onclick="app.moveTaskUp(${task.id})">
+                    <span class="task-date">${this.formatRelativeDate(item.date)}</span>
+                    ${(!mini && !isFinalized && !isGoal) ? `
+                        <button class="btn-action btn-move-up" onclick="app.moveTaskUp(${item.id})">
                             <i class="fas fa-arrow-up"></i>
                         </button>
                     ` : ''}
-                    ${(!mini && !isFinalized) ? `<button class="btn-action btn-delete" onclick="app.deleteTask(${task.id})"><i class="fas fa-trash"></i></button>` : ''}
+                    ${(!mini && !isFinalized) ? `<button class="btn-action btn-delete" onclick="app.${isGoal ? 'deleteGoal' : 'deleteTask'}(${item.id})"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
             </div>
             ${actionsHtml}
@@ -524,44 +818,51 @@ const app = {
     renderCalendar() {
         this.calendarContainer.innerHTML = `
             <div class="calendar-header-box">
-                <h3>O Teu Histórico</h3>
-                <p class="text-muted">Últimos 7 dias de produtividade</p>
+                <h3 class="premium-title">O Teu Histórico</h3>
+                <p class="premium-subtitle">Produtividade (Tarefas + Metas)</p>
             </div>
-            <div class="cal-grid"></div>
-            <div class="cal-legend">
-                <span>Pouco</span>
-                <div class="legend-scale">
-                    <div class="scale-box" style="background: rgba(255,107,0, 0.1)"></div>
-                    <div class="scale-box" style="background: rgba(255,107,0, 0.4)"></div>
-                    <div class="scale-box" style="background: rgba(255,107,0, 0.7)"></div>
-                    <div class="scale-box" style="background: rgba(255,107,0, 1.0)"></div>
+            <div class="cal-grid-premium"></div>
+            <div class="cal-legend-premium">
+                <span>Baixa</span>
+                <div class="legend-scale-premium">
+                    <div class="scale-box" style="background: rgba(255, 107, 0, 0.1)"></div>
+                    <div class="scale-box" style="background: rgba(255, 107, 0, 0.4)"></div>
+                    <div class="scale-box" style="background: rgba(255, 107, 0, 0.7)"></div>
+                    <div class="scale-box" style="background: rgba(255, 107, 0, 1.0)"></div>
                 </div>
-                <span>Muito</span>
+                <span>Alta</span>
+            </div>
+            <div class="calendar-footer-premium">
+                <p><i class="fas fa-circle-info"></i> O histórico inclui Tarefas e Metas Diárias.</p>
             </div>
         `;
-        const grid = this.calendarContainer.querySelector('.cal-grid');
+        const grid = this.calendarContainer.querySelector('.cal-grid-premium');
 
-        for (let i = 6; i >= 0; i--) {
+        // Show last 6 days + Today + Tomorrow (8 slots)
+        for (let i = 6; i >= -1; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
             const dateStr = d.toISOString().split('T')[0];
-            const dayName = d.toLocaleDateString('pt-BR', { weekday: 'short' }).split('.')[0];
             const isToday = i === 0;
+            const isTomorrow = i === -1;
 
-            const dayTasks = this.tasks.filter(t => t.date === dateStr);
-            let percent = 0;
-            if (dayTasks.length > 0) {
-                const completed = dayTasks.filter(t => t.status === 'completed').length;
-                percent = Math.round((completed / dayTasks.length) * 100);
-            }
+            const dayTasks = this.tasks.filter(t => t.date === dateStr && !t.archived);
+            const dayGoals = this.goals.filter(g => g.date === dateStr);
+
+            const totalItems = dayTasks.length + dayGoals.length;
+            const completedItems = dayTasks.filter(t => t.status === 'completed').length +
+                dayGoals.filter(g => g.status === 'completed').length;
+
+            let percent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
             const dayEl = document.createElement('div');
-            dayEl.className = `cal-day ${isToday ? 'is-today' : ''}`;
+            dayEl.className = `cal-day-premium ${isToday ? 'is-today' : ''} ${isTomorrow ? 'is-tomorrow' : ''}`;
 
-            // Background intensity based on percentage and presence of tasks
+            // Background intensity
             let intensity = 0;
-            if (dayTasks.length > 0) {
-                if (percent === 0) intensity = 0.1;
+            if (totalItems > 0) {
+                if (isTomorrow) intensity = 0.2; // Preview style for tomorrow
+                else if (percent === 0) intensity = 0.1;
                 else if (percent < 50) intensity = 0.4;
                 else if (percent < 100) intensity = 0.7;
                 else intensity = 1.0;
@@ -570,17 +871,26 @@ const app = {
             }
 
             dayEl.style.setProperty('--intensity', intensity);
-            if (dayTasks.length > 0) {
-                dayEl.classList.add('has-tasks');
+
+            let labelText = '';
+            if (isToday) labelText = 'Hoje';
+            else if (isTomorrow) labelText = 'Amanhã';
+            else {
+                const dayShort = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+                labelText = dayShort.charAt(0).toUpperCase() + dayShort.slice(1);
             }
 
             dayEl.innerHTML = `
-                <span class="cal-label">${dayName}</span>
-                <span class="cal-date">${d.getDate()}</span>
-                <div class="cal-progress-dot" style="opacity: ${dayTasks.length ? 1 : 0}"></div>
-                <div class="cal-tooltip">
-                    <strong>${dayTasks.length} tarefas</strong><br>
-                    ${percent}% concluído
+                <span class="cal-label-premium">${labelText}</span>
+                <span class="cal-date-premium">${d.getDate()}</span>
+                <div class="cal-indicator-premium" style="opacity: ${totalItems ? 1 : 0.3}"></div>
+                <div class="cal-tooltip-premium">
+                    <span class="tooltip-title">${isTomorrow ? 'Planeado' : 'Concluído'}</span>
+                    <span class="tooltip-val">${percent}%</span>
+                    <div class="tooltip-details">
+                        <span>${dayTasks.length} Tarefas</span>
+                        <span>${dayGoals.length} Metas</span>
+                    </div>
                 </div>
             `;
             grid.appendChild(dayEl);
@@ -599,6 +909,30 @@ const app = {
         const date = new Date(dateStr);
         const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' });
         return dayName.charAt(0).toUpperCase() + dayName.slice(1).replace('.', '');
+    },
+
+    formatDateLabel(dateStr) {
+        const today = new Date().toISOString().split('T')[0];
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterday = yesterdayDate.toISOString().split('T')[0];
+
+        if (dateStr === today) return 'Hoje';
+        if (dateStr === yesterday) return 'Ontem';
+
+        const date = new Date(dateStr);
+        const day = date.getDate();
+        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        return `${day} de ${monthNames[date.getMonth()]} `;
+    },
+
+    groupItemsByDate(items) {
+        const groups = {};
+        items.forEach(item => {
+            if (!groups[item.date]) groups[item.date] = [];
+            groups[item.date].push(item);
+        });
+        return groups;
     }
 };
 

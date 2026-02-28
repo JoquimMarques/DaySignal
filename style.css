@@ -13,6 +13,7 @@
     --safe-bottom: env(safe-area-inset-bottom);
     --radius: 20px;
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    --goal-blue: #007aff;
 }
 
 [data-theme="dark"] {
@@ -66,12 +67,39 @@ body {
     color: var(--primary);
 }
 
-.header-actions button {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 1.2rem;
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.header-actions button,
+.header-actions .nav-item {
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .header-actions button,
+[data-theme="dark"] .header-actions .nav-item {
+    background: #1e1e1e;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.header-actions button:active,
+.header-actions .nav-item:active {
+    transform: scale(0.92);
+    background: #333333;
 }
 
 /* Main Content */
@@ -103,24 +131,120 @@ main {
     }
 }
 
-/* Cards & Components */
-.welcome-card {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+/* Goal Type Selector */
+.goal-type-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.type-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background-color: var(--bg-light);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--text-muted);
+}
+
+.type-chip.selected {
+    background-color: var(--primary);
     color: white;
-    padding: 24px;
-    border-radius: var(--radius);
-    margin-bottom: 24px;
-    box-shadow: 0 10px 20px rgba(255, 107, 0, 0.2);
+    border-color: var(--primary);
+    box-shadow: 0 4px 10px rgba(255, 107, 0, 0.2);
 }
 
-.welcome-card h2 {
-    font-size: 1.5rem;
-    margin-bottom: 8px;
+.goal-type-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+    z-index: 2;
 }
 
-.welcome-card p {
+.goal-daily .goal-type-badge {
+    background-color: var(--goal-blue);
+}
+
+.goal-weekly .goal-type-badge {
+    background-color: var(--goal-blue);
+    opacity: 0.8;
+}
+
+/* Cards & Components */
+/* Welcome Card Redesign */
+.welcome-card {
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    color: white;
+    padding: 32px 24px;
+    border-radius: 30px;
+    margin-bottom: 28px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 107, 0, 0.1);
+    text-align: center;
+}
+
+[data-theme="dark"] .welcome-card {
+    background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
+    border: 1px solid rgba(255, 107, 0, 0.05);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.welcome-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 70% 30%, rgba(255, 107, 0, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.welcome-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+    background: linear-gradient(to right, #ffffff, #ffb380);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.welcome-subtitle {
+    font-size: 0.95rem;
     opacity: 0.9;
-    font-weight: 300;
+    font-weight: 400;
+    line-height: 1.4;
+    max-width: 280px;
+    margin: 0 auto 16px;
+    color: #e0e0e0;
+}
+
+.status-message {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    display: inline-block;
+    color: #ff9e59;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    animation: fadeIn 0.8s ease forwards;
 }
 
 /* Progress Circles Section */
@@ -253,6 +377,78 @@ main {
     transform: scale(1.05);
 }
 
+/* Goals Progress Bar Styles */
+/* Goals Progress Bar Styles */
+.goals-progress-container {
+    background: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="dark"] .goals-progress-container {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.goals-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.goals-progress-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: var(--bg-light);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .goals-progress-bar-bg {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.goals-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6b00, #ff9e59);
+    border-radius: 10px;
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 15px rgba(255, 107, 0, 0.4);
+    position: relative;
+}
+
+.goals-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
 .circle-box svg {
     transform: rotate(-90deg);
     width: 100%;
@@ -356,19 +552,54 @@ main {
     gap: 12px;
 }
 
-.task-item {
-    background: var(--card-bg);
-    padding: 16px;
-    border-radius: var(--radius);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    box-shadow: var(--shadow);
-    transition: transform 0.2s ease;
-}
-
 .task-item:active {
     transform: scale(0.98);
+}
+
+/* Date Grouping Styles */
+.date-group {
+    margin-bottom: 24px;
+}
+
+.date-group-header {
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.date-group-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.date-group-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+}
+
+.stat-pill.done {
+    color: var(--success);
+}
+
+.stat-pill.failed {
+    color: var(--danger);
+}
+
+.stat-pill.pending {
+    color: var(--accent);
 }
 
 /* Move Up Button */
@@ -434,6 +665,7 @@ main {
 .task-content {
     display: flex;
     align-items: flex-start;
+
     /* Changed from center to accommodate wrapping better */
     gap: 12px;
     flex-wrap: wrap;
@@ -448,6 +680,19 @@ main {
     /* Important for flex-shrink and word-break to work */
     overflow-wrap: anywhere;
     word-break: break-word;
+}
+
+.task-item {
+    background: var(--card-bg);
+    padding: 16px;
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease;
+    border-left: 6px solid var(--primary);
+    /* Tasks are Orange */
 }
 
 .task-item.completed {
@@ -469,6 +714,206 @@ main {
 
 .task-item.not-completed .task-text {
     color: var(--text-muted);
+}
+
+/* --- SIMPLIFIED GOALS SYSTEM --- */
+
+/* Goal Modal */
+.goal-modal-premium {
+    background: var(--card-bg);
+    border-radius: 24px 24px 0 0 !important;
+    padding: 24px 20px calc(30px + var(--safe-bottom)) !important;
+}
+
+.modal-header-premium {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.modal-header-premium h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--goal-blue);
+}
+
+.modal-header-premium p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+#goal-input {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid var(--bg-light);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    font-family: inherit;
+    font-size: 1rem;
+    background: var(--bg-light);
+    color: var(--text-main);
+    caret-color: var(--primary);
+    outline: none;
+}
+
+[data-theme="dark"] #goal-input {
+    border-color: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#goal-input:focus {
+    border-color: var(--goal-blue);
+}
+
+.goal-type-selector-premium {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.type-chip-premium {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--goal-blue);
+    background: blue;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .type-chip-premium {
+    background: rgba(2, 162, 230, 0.03);
+    border-color: transparent;
+}
+
+.type-chip-premium.active {
+    background: var(--goal-blue);
+    border-color: var(--goal-blue);
+    color: var(--goal-blue);
+}
+
+[data-theme="dark"] .type-chip-premium.active {
+    background: rgba(0, 123, 255, 0.1);
+}
+
+.modal-buttons-premium {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-cancel-premium {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: var(--bg-light);
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+[data-theme="dark"] .btn-cancel-premium {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.btn-save-premium {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: var(--goal-blue);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Redesigned Goal Card (Compact) */
+.goal-card-premium {
+    background: var(--card-bg);
+    border-radius: 18px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(0, 60, 95, 0.186);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 6px solid var(--goal-blue);
+    transition: all 0.2s ease;
+}
+
+.goal-card-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.goal-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.goal-status-display {
+    font-size: 1.1rem;
+}
+
+.goal-controls {
+    display: flex;
+    gap: 8px;
+    margin-left: 12px;
+}
+
+.btn-goal-success-small,
+.btn-goal-delete-small {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.btn-goal-success-small {
+    background: rgba(40, 146, 59, 0.571);
+    color: var(--success);
+}
+
+.btn-goal-delete-small {
+    background: rgba(158, 15, 15, 0.354);
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .btn-goal-delete-small {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.goal-card-premium.completed {
+    opacity: 0.7;
+    border-left-color: var(--success) !important;
+}
+
+.goal-card-premium.completed .goal-title {
+    text-decoration: line-through;
+}
+
+.goal-card-premium.not-completed {
+    border-left-color: var(--danger) !important;
+}
+
+.goal-card-premium:active {
+    transform: scale(0.98);
 }
 
 .task-actions {
@@ -574,8 +1019,13 @@ main {
     background: var(--card-bg);
     width: 100%;
     padding: 30px 24px calc(30px + var(--safe-bottom));
-    border-radius: 24px 24px 0 0;
-    animation: slideUp 0.3s ease;
+    border-top: 6px solid var(--primary);
+    border-radius: 30px 30px 0 0;
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#goal-modal .modal-content {
+    border-top-color: var(--goal-blue);
 }
 
 @keyframes slideUp {
@@ -620,6 +1070,10 @@ main {
     color: white;
 }
 
+#screen-calendar {
+    padding-top: 70px;
+}
+
 /* Calendar */
 .calendar-container {
     background: var(--card-bg);
@@ -644,39 +1098,55 @@ main {
 
 .cal-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    /* 2 rows on mobile, 8 total */
+    gap: 8px;
+}
+
+@media (min-width: 480px) {
+    .cal-grid {
+        grid-template-columns: repeat(8, 1fr);
+        gap: 10px;
+    }
 }
 
 .cal-day {
-    aspect-ratio: 1/1.2;
+    aspect-ratio: 1/1.1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-radius: 16px;
+    border-radius: 14px;
     position: relative;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid rgba(0, 0, 0, 0.03);
-    background: rgba(255, 107, 0, calc(var(--intensity) * 0.15));
+    background: rgba(var(--primary-rgb, 255, 107, 0), calc(var(--intensity) * 0.15));
     cursor: pointer;
 }
 
-.cal-day.has-tasks {
-    background: rgba(255, 107, 0, var(--intensity));
-    color: white;
-    border: none;
-    box-shadow: 0 4px 15px rgba(255, 107, 0, calc(var(--intensity) * 0.3));
+[data-theme="dark"] .cal-day {
+    border-color: rgba(255, 255, 255, 0.03);
 }
 
-.cal-day.has-tasks .cal-label,
-.cal-day.has-tasks .cal-date {
+.cal-day.has-items {
+    background: rgba(var(--primary-rgb, 255, 107, 0), var(--intensity));
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb, 255, 107, 0), calc(var(--intensity) * 0.25));
+}
+
+.cal-day.has-items .cal-label,
+.cal-day.has-items .cal-date {
     color: white;
 }
 
 .cal-day.is-today {
-    outline: 2px solid var(--primary);
+    outline: 3px solid var(--primary);
     outline-offset: 2px;
+}
+
+.cal-day.is-tomorrow {
+    border: 2px dashed rgba(var(--primary-rgb, 255, 107, 0), 0.3);
 }
 
 .cal-day:hover {
@@ -691,16 +1161,16 @@ main {
 }
 
 .cal-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
-    font-weight: 700;
+    font-weight: 800;
     margin-bottom: 2px;
     color: var(--text-muted);
 }
 
 .cal-date {
     font-weight: 800;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 .cal-progress-dot {
@@ -716,59 +1186,247 @@ main {
     bottom: 110%;
     left: 50%;
     transform: translateX(-50%) translateY(0);
-    background: var(--secondary);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 10px;
-    font-size: 0.75rem;
+    background: var(--card-bg);
+    color: var(--text-main);
+    padding: 12px;
+    border-radius: 14px;
+    font-size: 0.8rem;
     white-space: nowrap;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     opacity: 0;
     visibility: hidden;
     transition: all 0.2s ease;
+    z-index: 100;
     pointer-events: none;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(var(--primary-rgb, 255, 107, 0), 0.1);
 }
 
-.cal-tooltip::after {
-    content: '';
+.cal-tooltip strong {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+/* Calendar Premium Design */
+.calendar-header-box {
+    margin-bottom: 24px;
+    text-align: center;
+
+
+}
+
+.premium-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.premium-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.cal-grid-premium {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+
+}
+
+.cal-day-premium {
+    aspect-ratio: 1;
+    background: var(--card-bg);
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(121, 72, 3, 0.04);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.cal-day-premium:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.cal-day-premium.is-today {
+    border-color: var(--primary);
+    background: rgba(255, 107, 0, 0.08);
+}
+
+.cal-day-premium.is-tomorrow {
+    border-color: var(--goal-blue);
+    background: rgba(119, 0, 255, 0.05);
+}
+
+.cal-day-premium:not(.is-tomorrow) {
+    background: rgba(255, 107, 0, calc(var(--intensity, 0.05) * 0.4 + 0.02));
+}
+
+.cal-day-premium:not(.is-tomorrow).is-today {
+    background: rgba(255, 107, 0, calc(var(--intensity, 0.05) * 0.5 + 0.1));
+}
+
+.cal-label-premium {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.cal-date-premium {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.cal-indicator-premium {
+    width: 24px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--primary);
+    opacity: var(--intensity, 0.1);
+    margin-top: 8px;
+    box-shadow: 0 0 8px rgba(255, 107, 0, calc(var(--intensity, 0) * 0.5));
+}
+
+.is-tomorrow .cal-indicator-premium {
+    background: var(--goal-blue);
+    box-shadow: 0 0 8px rgba(0, 122, 255, 0.3);
+}
+
+/* Tooltip Premium */
+.cal-tooltip-premium {
     position: absolute;
-    top: 100%;
+    bottom: 110%;
     left: 50%;
-    transform: translateX(-50%);
-    border: 6px solid transparent;
-    border-top-color: var(--secondary);
+    transform: translateX(-50%) translateY(10px);
+    background: #000000;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    width: 120px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 100;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-.cal-legend {
+.cal-day-premium:hover .cal-tooltip-premium {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.tooltip-title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    opacity: 0.7;
+}
+
+.tooltip-val {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: #ff9e59;
+}
+
+.tooltip-details {
+    display: flex;
+    justify-content: space-around;
+    font-weight: 600;
+    font-size: 0.65rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 6px;
+}
+
+.cal-legend-premium {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 12px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-muted);
-    margin-top: 10px;
+    margin-bottom: 24px;
 }
 
-.legend-scale {
+.legend-scale-premium {
     display: flex;
-    gap: 4px;
+    gap: 6px;
 }
 
 .scale-box {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
 }
 
-@media (max-width: 400px) {
-    .cal-grid {
-        grid-template-columns: repeat(4, 1fr);
+.calendar-footer-premium {
+    text-align: center;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+}
+
+.calendar-footer-premium p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Tomorrow Group Style */
+.date-group.is-tomorrow-group {
+    border: 2px solid rgba(0, 122, 255, 0.1);
+    background: rgba(0, 122, 255, 0.02);
+    padding: 16px;
+    border-radius: 28px;
+    margin-top: 20px;
+}
+
+[data-theme="dark"] .date-group.is-tomorrow-group {
+    border-color: rgba(0, 122, 255, 0.2);
+    background: rgba(0, 122, 255, 0.05);
+}
+
+/* Animations */
+@keyframes pulse-blue {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.4);
     }
 
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 122, 255, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 122, 255, 0);
+    }
 }
 
-/* Floating Action Button-ish */
+.btn-goal-plus i {
+    animation: none;
+}
+
+.btn-goal-plus:hover i {
+    transform: scale(1.2);
+}
+
+/* Task Header & Buttons */
 .tasks-header {
     display: flex;
     justify-content: space-between;
@@ -776,18 +1434,39 @@ main {
     margin-bottom: 24px;
 }
 
+.tasks-header-actions {
+    display: flex;
+    gap: 12px;
+}
+
 .fab-inline {
-    width: 45px;
-    height: 45px;
-    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
     background: var(--primary);
     color: white;
     border: none;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 5px 15px rgba(255, 107, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.25);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fab-inline:active {
+    transform: scale(0.9);
+}
+
+.btn-goal-plus {
+    background: var(--goal-blue) !important;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25) !important;
+}
+
+.tasks-header h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
 }
 
 /* Settings */
@@ -880,4 +1559,58 @@ main {
 
 .btn-close-minimal:hover {
     opacity: 1;
+}
+
+/* Task Date Selector */
+.task-date-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.date-chip {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid var(--bg-light);
+    background: var(--bg-light);
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .date-chip {
+    border-color: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.date-chip.active {
+    background: rgba(255, 107, 0, 0.1);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+[data-theme="dark"] .date-chip.active {
+    background: rgba(255, 107, 0, 0.1);
+}
+
+.text-mini-info {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    width: 100%;
+    margin: 8px 0;
+    opacity: 0.8;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+#save-task.btn-primary {
+    font-weight: 700;
 }
