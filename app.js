@@ -285,13 +285,13 @@ const app = {
         const activeTasks = this.tasks.filter(t => !t.archived);
         const todayTasks = activeTasks.filter(t => t.date === today);
 
-        // Update Date Badge
-        if (this.progressDateBadge) {
+        // Update welcome title with day name
+        const welcomeDay = document.getElementById('welcome-day');
+        if (welcomeDay) {
             const dateObj = new Date();
             const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
-            // Capitalize first letter and handle "Hoje"
             const label = dayName.charAt(0).toUpperCase() + dayName.slice(1).split('-')[0];
-            this.progressDateBadge.innerText = `O Teu Ritmo de ${label}`;
+            welcomeDay.innerText = label;
         }
 
         this.updateMotivationBanner();
@@ -323,19 +323,102 @@ const app = {
 
     updateGoalsStats() {
         if (!this.goalsProgressFill) return;
+        const today = new Date().toISOString().split('T')[0];
+        const todayGoals = this.goals.filter(g => g.date === today);
 
-        if (this.goals.length === 0) {
+        if (todayGoals.length === 0) {
             document.getElementById('goals-progress-container').style.display = 'none';
             return;
         }
 
         document.getElementById('goals-progress-container').style.display = 'block';
-        const total = this.goals.length;
-        const completed = this.goals.filter(g => g.status === 'completed').length;
-        const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+        const completed = todayGoals.filter(g => g.status === 'completed').length;
+        const percent = Math.round((completed / todayGoals.length) * 100);
 
         this.goalsProgressFill.style.width = `${percent}%`;
         this.goalsProgressPercent.innerText = `${percent}%`;
+    },
+
+    renderGoals() {
+        if (!this.goalsListContainer) return;
+
+        if (this.goals.length === 0) {
+            this.goalsListContainer.innerHTML = '<div class="empty-state"><p>Ainda não tens metas definidas. Clica no + para começar!</p></div>';
+            return;
+        }
+
+        this.goalsListContainer.innerHTML = '';
+        const today = new Date().toISOString().split('T')[0];
+
+        // Group goals by date
+        const groupedGoals = this.groupItemsByDate(this.goals);
+
+        // Sort dates: today first, then descending
+        const sortedDates = Object.keys(groupedGoals).sort((a, b) => {
+            if (a === today) return -1;
+            if (b === today) return 1;
+            return b.localeCompare(a);
+        });
+
+        sortedDates.forEach(date => {
+            const isToday = date === today;
+            const dayGoals = groupedGoals[date];
+
+            // Auto-fail past pending goals
+            if (!isToday) {
+                dayGoals.forEach(goal => {
+                    if (goal.status === 'pending') {
+                        goal.status = 'failed';
+                    }
+                });
+                this.save();
+            }
+
+            const stats = {
+                total: dayGoals.length,
+                done: dayGoals.filter(g => g.status === 'completed').length,
+                failed: dayGoals.filter(g => g.status === 'failed').length,
+                pending: dayGoals.filter(g => g.status === 'pending').length
+            };
+
+            const groupDiv = document.createElement('div');
+            groupDiv.className = `date-group ${isToday ? 'is-expanded' : 'is-history-group'}`;
+            groupDiv.dataset.date = date;
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = `date-group-header ${!isToday ? 'clickable-header' : ''}`;
+
+            headerDiv.innerHTML = `
+                <div class="header-main-info">
+                    <span class="date-group-title">${this.formatDateLabel(date)}</span>
+                    ${!isToday ? `<i class="fas fa-chevron-down expand-icon"></i>` : ''}
+                </div>
+                <div class="date-group-stats">
+                    <span class="stat-pill"><i class="fas fa-bullseye"></i> ${stats.total}</span>
+                    <span class="stat-pill done"><i class="fas fa-check"></i> ${stats.done}</span>
+                    <span class="stat-pill failed"><i class="fas fa-xmark"></i> ${stats.failed}</span>
+                    ${stats.pending > 0 ? `<span class="stat-pill pending"><i class="fas fa-clock"></i> ${stats.pending}</span>` : ''}
+                </div>
+            `;
+
+            if (!isToday) {
+                headerDiv.addEventListener('click', () => {
+                    groupDiv.classList.toggle('is-expanded');
+                });
+            }
+
+            groupDiv.appendChild(headerDiv);
+
+            const listDiv = document.createElement('div');
+            listDiv.className = 'goals-group-items date-group-tasks';
+
+            [...dayGoals].reverse().forEach(goal => {
+                listDiv.appendChild(this.createGoalElement(goal));
+            });
+
+            groupDiv.appendChild(listDiv);
+            this.goalsListContainer.appendChild(groupDiv);
+        });
     },
 
     updateProgressCircles(done, failed, pending, total) {
@@ -352,10 +435,8 @@ const app = {
         const failedPercent = total ? (failed / total) * 100 : 0;
         const pendingPercent = total ? (pending / total) * 100 : 0;
 
-        // SVG dasharray logic: circumference is 2 * PI * r (r=34 -> 213.6)
         const circumference = 213.6;
 
-        // Update immediately
         requestAnimationFrame(() => {
             doneCircle.style.strokeDashoffset = circumference - (donePercent / 100) * circumference;
             failedCircle.style.strokeDashoffset = circumference - (failedPercent / 100) * circumference;
@@ -687,46 +768,6 @@ const app = {
         if (this.currentScreen === 'calendar') this.renderCalendar();
     },
 
-    renderGoals() {
-        if (!this.goalsListContainer) return;
-
-        if (this.goals.length === 0) {
-            this.goalsListContainer.innerHTML = '<div class="empty-state"><p>Ainda não tens metas definidas. Clica no + para começar!</p></div>';
-            return;
-        }
-
-        this.goalsListContainer.innerHTML = '';
-
-        // Group goals by date (same logic as tasks)
-        const groupedGoals = this.groupItemsByDate(this.goals);
-
-        // Sort dates descending
-        const sortedDates = Object.keys(groupedGoals).sort((a, b) => b.localeCompare(a));
-
-        sortedDates.forEach(date => {
-            // Add date header
-            const header = document.createElement('div');
-            header.className = 'task-date-header'; // Reusing task header style for consistency
-            header.innerHTML = `<span>${this.formatDateLabel(date)}</span>`;
-            this.goalsListContainer.appendChild(header);
-
-            // Container for goals of this date
-            const dayContainer = document.createElement('div');
-            dayContainer.className = 'day-items-container';
-
-            groupedGoals[date].reverse().forEach(goal => {
-                // Auto-fail logic: if date is in the past and status is pending, it's failed
-                const today = new Date().toISOString().split('T')[0];
-                if (date < today && goal.status === 'pending') {
-                    goal.status = 'failed';
-                    this.save();
-                }
-                dayContainer.appendChild(this.createGoalElement(goal));
-            });
-
-            this.goalsListContainer.appendChild(dayContainer);
-        });
-    },
 
     createGoalElement(goal) {
         const div = document.createElement('div');

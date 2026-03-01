@@ -6,13 +6,13 @@
     --card-bg: #ffffff;
     --text-main: #2d3436;
     --text-muted: #636e72;
-    --success: #28923c;
-    --danger: #ff5e57;
+    --success: #34c759;
+    --danger: #ff3b30;
     --accent: #5f27cd;
     --nav-height: 75px;
     --safe-bottom: env(safe-area-inset-bottom);
     --radius: 20px;
-    --shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     --goal-blue: #007aff;
 }
 
@@ -21,7 +21,7 @@
     --card-bg: #1e1e1e;
     --text-main: #f8f9fa;
     --text-muted: #a0a0a0;
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 * {
@@ -184,21 +184,21 @@ main {
 /* Cards & Components */
 /* Welcome Card Redesign */
 .welcome-card {
-    background: linear-gradient(135deg, #000000 0%, #7b3002 100%);
+    background: linear-gradient(135deg, #000000 0%, #e67903e5 100%);
     color: white;
     padding: 32px 24px;
     border-radius: 30px;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 107, 0, 0.1);
+    border: 1px solid rgba(255, 128, 0, 0.926);
     text-align: center;
 }
 
 [data-theme="dark"] .welcome-card {
-    background: linear-gradient(135deg, #000000 0%, #a14f02 100%);
-    border: 1px solid rgba(255, 106, 0, 0.116);
+    background: linear-gradient(135deg, #442001 0%, #a14f02 100%);
+    border: 1px solid rgba(255, 106, 0, 0.531);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
@@ -222,6 +222,13 @@ main {
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+#welcome-day {
+    -webkit-text-fill-color: #ffdf80;
+    text-decoration-color: rgba(255, 200, 80, 0.45);
+    text-underline-offset: 6px;
+    text-decoration-thickness: 2px;
 }
 
 .welcome-subtitle {
@@ -251,13 +258,15 @@ main {
 .progress-section-header {
     display: flex;
     justify-content: center;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
+
+
 }
 
 .date-badge {
     background: var(--card-bg);
     color: var(--primary);
-    padding: 6px 14px;
+    padding: 6px 13px;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 700;
@@ -288,11 +297,12 @@ main {
 .progress-card {
     flex: 1;
     background: var(--card-bg);
+
     padding: 16px 8px;
     /* Reduced from 24px 16px */
-    border-radius: 24px;
+    border-radius: 21px;
     text-align: center;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -301,14 +311,14 @@ main {
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border: 1px solid rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(255, 140, 0, 0.388);
     cursor: default;
     min-width: 90px;
 }
 
 [data-theme="dark"] .progress-card {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 140, 0, 0.183);
 }
 
 .progress-card:hover,
@@ -368,7 +378,7 @@ main {
     align-items: center;
     justify-content: center;
     /* Adding a subtle drop shadow to the SVG itself */
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.05));
+    filter: drop-shadow(0 4px 3px rgba(189, 99, 2, 0.367));
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -479,17 +489,17 @@ main {
 /* Gradients using drop shadow trick for glowing effect */
 .circle-box .progress.done {
     stroke: var(--success);
-    filter: drop-shadow(0 0 4px rgba(40, 146, 60, 0.4));
+    filter: drop-shadow(0 0 3px rgba(40, 146, 59, 0.758));
 }
 
 .circle-box .progress.failed {
     stroke: var(--danger);
-    filter: drop-shadow(0 0 4px rgba(255, 94, 87, 0.4));
+    filter: drop-shadow(0 0 4px rgba(255, 59, 48, 0.8));
 }
 
 .circle-box .progress.pending {
     stroke: var(--accent);
-    filter: drop-shadow(0 0 4px rgba(95, 39, 205, 0.4));
+    filter: drop-shadow(0 0 3px rgba(117, 2, 249, 0.551));
 }
 
 .stat-num {
@@ -652,14 +662,17 @@ main {
 
 .stat-pill.done {
     color: var(--success);
+    background: rgba(52, 199, 89, 0.1);
 }
 
 .stat-pill.failed {
     color: var(--danger);
+    background: rgba(255, 59, 48, 0.1);
 }
 
 .stat-pill.pending {
     color: var(--accent);
+    background: rgba(95, 39, 205, 0.1);
 }
 
 /* Move Up Button */
@@ -718,8 +731,8 @@ main {
 }
 
 .btn-status-failed {
-    background: rgba(255, 69, 58, 0.1) !important;
-    color: #ff453a !important;
+    background: rgba(255, 59, 48, 0.1) !important;
+    color: var(--danger) !important;
 }
 
 .task-content {
@@ -751,8 +764,8 @@ main {
     gap: 12px;
     box-shadow: var(--shadow);
     transition: transform 0.2s ease;
-    border-left: 6px solid var(--primary);
-    /* Tasks are Orange */
+    border-left: 6px solid var(--accent);
+    /* Pending tasks are Purple */
 }
 
 .task-item.completed {
@@ -895,16 +908,22 @@ main {
 }
 
 /* Redesigned Goal Card (Compact) */
+.goals-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 8px;
+}
+
 .goal-card-premium {
     background: var(--card-bg);
-    border-radius: 18px;
-    padding: 12px;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 12px rgba(0, 60, 95, 0.186);
+    border-radius: 16px;
+    padding: 14px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-left: 6px solid var(--goal-blue);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease;
 }
 
@@ -946,30 +965,32 @@ main {
 }
 
 .btn-goal-success-small {
-    background: rgba(40, 146, 59, 0.571);
+    background: rgba(52, 199, 89, 0.12);
     color: var(--success);
 }
 
 .btn-goal-delete-small {
-    background: rgba(158, 15, 15, 0.354);
+    background: rgba(0, 0, 0, 0.05);
     color: var(--text-muted);
 }
 
 [data-theme="dark"] .btn-goal-delete-small {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.07);
 }
 
 .goal-card-premium.completed {
-    opacity: 0.7;
+    opacity: 0.65;
     border-left-color: var(--success) !important;
 }
 
 .goal-card-premium.completed .goal-title {
     text-decoration: line-through;
+    color: var(--text-muted);
 }
 
 .goal-card-premium.not-completed {
     border-left-color: var(--danger) !important;
+    opacity: 0.75;
 }
 
 .goal-card-premium:active {
