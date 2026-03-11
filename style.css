@@ -297,28 +297,24 @@ main {
 .progress-card {
     flex: 1;
     background: var(--card-bg);
-
     padding: 16px 8px;
-    /* Reduced from 24px 16px */
     border-radius: 21px;
     text-align: center;
-
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    /* Reduced gap */
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border: 1px solid rgba(255, 140, 0, 0.388);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     cursor: default;
     min-width: 90px;
 }
 
 [data-theme="dark"] .progress-card {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 140, 0, 0.183);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .progress-card:hover,
@@ -370,15 +366,12 @@ main {
 .circle-box {
     position: relative;
     width: 80px;
-    /* Reduced from 110px */
     height: 80px;
-    /* Reduced from 110px */
     z-index: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Adding a subtle drop shadow to the SVG itself */
-    filter: drop-shadow(0 4px 3px rgba(189, 99, 2, 0.367));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -909,10 +902,15 @@ main {
 
 /* Redesigned Goal Card (Compact) */
 .goals-group-items {
-    display: flex;
+    display: none;
+    /* Changed from flex to hide by default */
     flex-direction: column;
     gap: 8px;
     padding-top: 8px;
+}
+
+.is-expanded .goals-group-items {
+    display: flex;
 }
 
 .goal-card-premium {
@@ -951,22 +949,36 @@ main {
 }
 
 .btn-goal-success-small,
+.btn-goal-fail-small,
 .btn-goal-delete-small {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 10px;
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     transition: all 0.2s ease;
 }
 
 .btn-goal-success-small {
     background: rgba(52, 199, 89, 0.12);
     color: var(--success);
+}
+
+.btn-goal-success-small:hover {
+    background: rgba(52, 199, 89, 0.22);
+}
+
+.btn-goal-fail-small {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--danger);
+}
+
+.btn-goal-fail-small:hover {
+    background: rgba(255, 59, 48, 0.2);
 }
 
 .btn-goal-delete-small {
@@ -1694,4 +1706,655 @@ main {
 
 #save-task.btn-primary {
     font-weight: 700;
+}
+
+/* --- STUDY SCREEN STYLES --- */
+.study-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 520px;
+    margin: 0 auto;
+    padding-bottom: 100px;
+}
+
+/* ── Input Card ── */
+.study-input-card {
+    background: var(--card-bg);
+    padding: 12px 14px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid rgba(255, 107, 0, 0.1);
+}
+
+#study-input {
+    width: 100%;
+    min-height: 72px;
+    max-height: 140px;
+    background: var(--bg-light);
+    border: 1.5px solid transparent;
+    border-radius: 12px;
+    padding: 11px 13px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-main);
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+#study-input::placeholder {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+#study-input:focus {
+    border-color: var(--primary);
+}
+
+/* ── Action Row: icons left, button right ── */
+.study-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.media-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Icon Buttons (image, mic, trash) */
+.media-actions .btn-icon-minimal {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-light);
+    border-radius: 9px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.media-actions .btn-icon-minimal:hover {
+    background: rgba(255, 107, 0, 0.08);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.media-actions .btn-icon-minimal.danger:hover {
+    background: rgba(255, 59, 48, 0.08);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+/* ── Recording UI ── */
+.btn-icon-minimal.recording {
+    background: var(--danger) !important;
+    color: white !important;
+    border-color: var(--danger) !important;
+    animation: pulse-red 1.4s infinite;
+}
+
+@keyframes pulse-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6);
+    }
+
+    70% {
+        box-shadow: 0 0 0 8px rgba(255, 59, 48, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
+    }
+}
+
+.recording-waves {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 28px;
+    padding: 0 8px;
+    background: rgba(255, 59, 48, 0.05);
+    border-radius: 20px;
+}
+
+.recording-waves span {
+    width: 2.5px;
+    height: 8px;
+    background: var(--danger);
+    border-radius: 10px;
+    animation: wave-anim 0.9s ease-in-out infinite;
+}
+
+.recording-waves span:nth-child(2) {
+    animation-delay: 0.1s;
+    height: 16px;
+}
+
+.recording-waves span:nth-child(3) {
+    animation-delay: 0.2s;
+    height: 12px;
+}
+
+.recording-waves span:nth-child(4) {
+    animation-delay: 0.3s;
+    height: 18px;
+}
+
+.recording-waves span:nth-child(5) {
+    animation-delay: 0.4s;
+    height: 10px;
+}
+
+@keyframes wave-anim {
+
+    0%,
+    100% {
+        transform: scaleY(1)
+    }
+
+    50% {
+        transform: scaleY(1.9)
+    }
+}
+
+#recording-timer {
+    margin-left: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--danger);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Media Preview ── */
+.media-preview-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    background: var(--bg-light);
+    border-radius: 12px;
+    border: 1.5px dashed rgba(255, 107, 0, 0.25);
+}
+
+.preview-item {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+}
+
+.preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-item.audio-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: white;
+    font-size: 1.3rem;
+    gap: 2px;
+}
+
+.preview-item.audio-preview span {
+    font-size: 0.55rem;
+    font-weight: 700;
+}
+
+/* ── Generate Button ── */
+.btn-primary-glow {
+    background: linear-gradient(135deg, var(--primary) 0%, #ff8c00 100%);
+    color: white;
+    border: none;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 11px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 6px 14px rgba(255, 107, 0, 0.25);
+    transition: all 0.25s;
+}
+
+.btn-primary-glow:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 18px rgba(255, 107, 0, 0.35);
+}
+
+.btn-primary-glow:active {
+    transform: translateY(0);
+}
+
+/* ── Loading ── */
+.study-loading {
+    text-align: center;
+    padding: 28px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.spinner {
+    width: 34px;
+    height: 34px;
+    border: 3px solid rgba(255, 107, 0, 0.1);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ── Result Card ── */
+.study-result-container {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255, 107, 0, 0.12);
+    animation: slideUp 0.28s ease-out;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.result-header h3 {
+    font-size: 0.95rem;
+    margin: 0;
+    color: var(--primary);
+}
+
+/* ── Study Content Formatting ── */
+.markdown-body h4 {
+    font-size: 0.88rem;
+    border-left: 3px solid var(--primary);
+    padding: 6px 10px;
+    margin: 14px 0 8px;
+    background: rgba(255, 107, 0, 0.05);
+    border-radius: 0 6px 6px 0;
+}
+
+.markdown-body p {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.markdown-body ul {
+    padding-left: 18px;
+    margin-bottom: 10px;
+}
+
+.markdown-body li {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 4px;
+}
+
+.markdown-body code {
+    background: rgba(255, 107, 0, 0.1);
+    color: var(--primary);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+}
+
+.markdown-body mark {
+    background: rgba(255, 223, 128, 0.3);
+    color: var(--text-main);
+    padding: 1px 3px;
+    border-radius: 3px;
+}
+
+/* ── History Section ── */
+.study-history-section {
+    margin-top: 4px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.section-header h3 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+.btn-text-only {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.btn-text-only:hover {
+    background: rgba(255, 107, 0, 0.08);
+}
+
+.study-history-mini-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* History Item Cards (mini + modal) */
+.history-item-card {
+    background: var(--card-bg);
+    padding: 11px 14px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border-left: 3px solid var(--primary);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    gap: 8px;
+}
+
+.history-item-card:active {
+    transform: scale(0.98);
+}
+
+.history-item-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.history-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-item-info h5 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-item-info small {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.history-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.btn-delete-history {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+
+.btn-delete-history:hover {
+    color: var(--danger);
+    background: rgba(255, 59, 48, 0.09);
+}
+
+/* Modal list */
+.history-modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 0;
+}
+
+/* ── Modals ── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 2000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+}
+
+.modal-content.study-modal {
+    background: var(--card-bg);
+    width: 100%;
+    max-width: 500px;
+    max-height: 88vh;
+    border-radius: 24px 24px 0 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideFromBottom 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+    overflow: hidden;
+}
+
+@keyframes slideFromBottom {
+    from {
+        transform: translateY(100%);
+        opacity: 0.5;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.study-modal .modal-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.study-modal .modal-header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--primary);
+    max-width: 80%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.study-modal .markdown-body {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 0.88rem;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.markdown-body {
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+.markdown-body h4 {
+    margin: 20px 0 10px;
+    color: var(--primary);
+}
+
+.markdown-body p {
+    margin-bottom: 12px;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+    margin-bottom: 16px;
+    padding-left: 20px;
+}
+
+.markdown-body li {
+    margin-bottom: 8px;
+}
+
+.study-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.study-history-item {
+    background: var(--card-bg);
+    padding: 16px;
+    border-radius: 18px;
+    border-left: 5px solid var(--primary);
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.study-history-item:hover {
+    transform: scale(1.02);
+    background: var(--bg-light);
+}
+
+.study-info h4 {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.study-info span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.settings-input {
+    background: var(--bg-light);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: inherit;
+    color: var(--text-main);
+    width: 200px;
+}
+
+.settings-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-info small {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.btn-icon-minimal {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon-minimal:hover {
+    color: var(--primary);
 }

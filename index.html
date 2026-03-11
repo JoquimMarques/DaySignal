@@ -166,6 +166,13 @@
                 <h2>Configurações</h2>
                 <div class="settings-list">
                     <div class="settings-item">
+                        <div class="settings-info">
+                            <span>Chave API OpenRouter</span>
+                            <small>Necessária para as funcionalidades de IA</small>
+                        </div>
+                        <input type="password" id="openrouter-key" placeholder="sk-or-v1-..." class="settings-input">
+                    </div>
+                    <div class="settings-item">
                         <span>Tema Escuro</span>
                         <input type="checkbox" id="dark-mode-check">
                     </div>
@@ -183,7 +190,101 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Study Screen [NEW] -->
+            <section id="screen-study" class="screen">
+                <div class="study-container">
+                    <div class="study-input-card">
+                        <textarea id="study-input"
+                            placeholder="Escreve aqui a tua"
+                            maxlength="1000"></textarea>
+
+                        <div id="study-media-preview" class="media-preview-area" style="display: none;">
+                            <!-- Previews will appear here -->
+                        </div>
+
+                        <div class="study-actions-row">
+                            <div class="media-actions">
+                                <label for="study-image-input" class="btn-icon-minimal" title="Adicionar Imagem">
+                                    <i class="fas fa-image"></i>
+                                </label>
+                                <input type="file" id="study-image-input" accept="image/*" style="display: none;">
+
+                                <button id="voice-record-btn" class="btn-icon-minimal" title="Gravar Áudio">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <div id="recording-waves" class="recording-waves" style="display: none;">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                    <small id="recording-timer">00:00</small>
+                                </div>
+
+                                <button id="clear-media-btn" class="btn-icon-minimal danger" style="display: none;"
+                                    title="Limpar Ficheiros">
+                                    <i class="fas fa-trash-can"></i>
+                                </button>
+                            </div>
+                            <button id="generate-study-btn" class="btn-primary-glow">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                                <span>Gerar</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="study-loading" class="study-loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>A IA está a preparar o teu estudo...</p>
+                    </div>
+
+                    <div id="study-result" class="study-result-container" style="display: none;">
+                        <div class="result-header">
+                            <h3>Exercícios Propostos</h3>
+                            <button id="clear-study-btn" class="btn-icon-minimal"><i
+                                    class="fas fa-rotate-left"></i></button>
+                        </div>
+                        <div id="study-content" class="markdown-body"></div>
+                    </div>
+
+                    <div class="study-history-section">
+                        <div class="section-header">
+                            <h3>Histórico Recente</h3>
+                            <button id="view-all-history-btn" class="btn-text-only">Ver Tudo</button>
+                        </div>
+                        <div id="study-history-mini-container" class="study-history-mini-list">
+                            <!-- Mini-list of last 2 items will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
+
+        <!-- Full History Modal [NEW - MOVED] -->
+        <div id="study-full-history-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content study-modal">
+                <div class="modal-header">
+                    <h3>Histórico Completo</h3>
+                    <button class="close-modal" aria-label="Fechar" onclick="app.closeFullHistoryModal()"><i
+                            class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 0 20px 20px;">
+                    <div id="full-history-list" class="history-modal-list">
+                        <!-- Full list with delete buttons -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Study Detail Modal -->
+        <div id="study-history-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content study-modal">
+                <div class="modal-header">
+                    <h3 id="history-modal-title">Conversa</h3>
+                    <button class="close-modal" onclick="app.closeStudyHistoryModal()"><i
+                            class="fas fa-times"></i></button>
+                </div>
+                <div id="history-modal-content" class="markdown-body" style="overflow-y: auto; flex: 1; padding: 20px;">
+                </div>
+            </div>
+        </div>
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
@@ -202,6 +303,10 @@
             <button class="nav-item" data-screen="calendar">
                 <i class="fas fa-calendar-days"></i>
                 <span>Calendário</span>
+            </button>
+            <button class="nav-item" data-screen="study">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Estudo</span>
             </button>
 
         </nav>

@@ -5,6 +5,8 @@
 const app = {
     tasks: JSON.parse(localStorage.getItem('tasks')) || [],
     goals: JSON.parse(localStorage.getItem('goals')) || [],
+    studyHistory: JSON.parse(localStorage.getItem('studyHistory')) || [],
+    openRouterKey: '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',
     currentScreen: 'home',
 
     init() {
@@ -45,6 +47,40 @@ const app = {
         this.goalsListContainer = document.getElementById('active-goals-list');
         this.goalsProgressFill = document.getElementById('goals-progress-fill');
         this.goalsProgressPercent = document.getElementById('goals-progress-percent');
+
+        // Study DOM
+        this.studyInput = document.getElementById('study-input');
+        this.studyBtn = document.getElementById('generate-study-btn');
+        this.studyLoading = document.getElementById('study-loading');
+        this.studyResult = document.getElementById('study-result');
+        this.studyContent = document.getElementById('study-content');
+        this.studyHistoryList = document.getElementById('study-history-list');
+        this.clearStudyBtn = document.getElementById('clear-study-btn');
+        this.openRouterKeyInput = document.getElementById('openrouter-key');
+
+        // Multimodal Study DOM
+        this.studyImageInput = document.getElementById('study-image-input');
+        this.studyMediaPreview = document.getElementById('study-media-preview');
+        this.clearMediaBtn = document.getElementById('clear-media-btn');
+        this.voiceRecordBtn = document.getElementById('voice-record-btn');
+        this.recordingWaves = document.getElementById('recording-waves');
+        this.recordingTimer = document.getElementById('recording-timer');
+
+        // Study History Modal DOM
+        this.studyHistoryModal = document.getElementById('study-history-modal');
+        this.historyModalTitle = document.getElementById('history-modal-title');
+        this.historyModalContent = document.getElementById('history-modal-content');
+        this.viewAllHistoryBtn = document.getElementById('view-all-history-btn');
+        this.studyFullHistoryModal = document.getElementById('study-full-history-modal');
+        this.fullHistoryList = document.getElementById('full-history-list');
+        this.studyHistoryMiniContainer = document.getElementById('study-history-mini-container');
+
+        this.selectedMedia = []; // Array of { type, data, mimeType }
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.isRecording = false;
+        this.recordingStartTime = 0;
+        this.recordingInterval = null;
     },
 
     bindEvents() {
@@ -112,6 +148,23 @@ const app = {
         this.goalModal.addEventListener('click', (e) => {
             if (e.target === this.goalModal) this.toggleGoalModal(false);
         });
+
+        // Study Logic
+        if (this.studyBtn) this.studyBtn.addEventListener('click', () => this.generateStudy());
+        if (this.clearStudyBtn) this.clearStudyBtn.addEventListener('click', () => this.clearStudyResult());
+        if (this.openRouterKeyInput) {
+            this.openRouterKeyInput.value = this.openRouterKey;
+            this.openRouterKeyInput.addEventListener('change', (e) => {
+                this.openRouterKey = e.target.value;
+                localStorage.setItem('openRouterKey', this.openRouterKey);
+            });
+        }
+
+        // Multimodal Events
+        if (this.studyImageInput) this.studyImageInput.addEventListener('change', (e) => this.handleMediaUpload(e, 'image'));
+        if (this.voiceRecordBtn) this.voiceRecordBtn.addEventListener('click', () => this.toggleVoiceRecording());
+        if (this.clearMediaBtn) this.clearMediaBtn.addEventListener('click', () => this.clearSelectedMedia());
+        if (this.viewAllHistoryBtn) this.viewAllHistoryBtn.addEventListener('click', () => this.openFullHistoryModal());
     },
 
     navigateTo(screenId) {
@@ -129,7 +182,8 @@ const app = {
             'tasks': 'Minhas Tarefas',
             'calendar': 'Relatórios',
             'settings': 'Ajustes',
-            'goals': 'Minhas Metas'
+            'goals': 'Minhas Metas',
+            'study': 'Estudo IA'
         };
         this.screenTitle.innerText = titles[screenId] || 'DaySignal';
 
@@ -225,6 +279,7 @@ const app = {
     save() {
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
         localStorage.setItem('goals', JSON.stringify(this.goals));
+        localStorage.setItem('studyHistory', JSON.stringify(this.studyHistory));
     },
 
     // Goal Methods
@@ -766,6 +821,9 @@ const app = {
 
         // Calendar
         if (this.currentScreen === 'calendar') this.renderCalendar();
+
+        // Study
+        if (this.currentScreen === 'study') this.renderStudyHistory(false);
     },
 
 
@@ -791,6 +849,9 @@ const app = {
                 ${!isFinalized ? `
                     <button class="btn-goal-success-small" onclick="app.updateGoalStatus(${goal.id}, 'completed')" title="Concluir">
                         <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn-goal-fail-small" onclick="app.updateGoalStatus(${goal.id}, 'failed')" title="Não Fiz Hoje">
+                        <i class="fas fa-xmark"></i>
                     </button>
                 ` : ''}
                 <button class="btn-goal-delete-small" onclick="app.deleteGoal(${goal.id})" title="Eliminar">
@@ -982,6 +1043,434 @@ const app = {
             groups[item.date].push(item);
         });
         return groups;
+    },
+
+    // Study Methods
+    async generateStudy() {
+        const input = this.studyInput.value.trim();
+        if (!input && this.selectedMedia.length === 0) {
+            alert('Por favor, escreve algo ou carrega uma imagem/áudio para estudar.');
+            return;
+        }
+
+        if (!this.openRouterKey) {
+            alert('Por favor, define a tua chave API do OpenRouter nas Configurações.');
+            this.navigateTo('settings');
+            return;
+        }
+
+        this.studyBtn.disabled = true;
+        this.studyLoading.style.display = 'flex';
+        this.studyResult.style.display = 'none';
+
+        try {
+            // Prepare messages for multimodal API
+            let content = [];
+
+            // Add media FIRST
+            if (this.selectedMedia.length > 0) {
+                this.selectedMedia.forEach(media => {
+                    if (media.type === 'image') {
+                        content.push({
+                            type: 'image_url',
+                            image_url: { url: `data:${media.mimeType};base64,${media.data}` }
+                        });
+                    } else if (media.type === 'audio') {
+                        // For audio, many providers use this structure or simply a generic media block
+                        // Gemini via OpenRouter is very flexible with data URIs
+                        content.push({
+                            type: 'image_url',
+                            image_url: { url: `data:${media.mimeType};base64,${media.data}` }
+                        });
+                    }
+                });
+            }
+
+            // Add text or fallback prompt
+            if (input) {
+                content.push({ type: 'text', text: input });
+            } else if (this.selectedMedia.length > 0) {
+                content.push({ type: 'text', text: 'Analisa este ficheiro e ajuda-me a estudar.' });
+            }
+
+            // Simple text-only structure if no media
+            if (this.selectedMedia.length === 0) {
+                content = input;
+            }
+
+            console.log('DaySignal: Pedido enviado com o modelo Gemini 2.0 Flash Exp...');
+
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.openRouterKey.trim()}`,
+                    'HTTP-Referer': 'https://daysignal.app',
+                    'X-Title': 'DaySignalStudy'
+                },
+                body: JSON.stringify({
+                    model: 'google/gemini-2.0-flash-001',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `És um professor assistente especializado em ajudar alunos a estudar. 
+                            IMPORTANTE: 
+                            1. Responde SEMPRE em Português de Portugal.
+                            2. NÃO uses blocos de código markdown (como \`\`\`html). 
+                            3. Usa HTML rico para a estrutura: <h4> para títulos, <p> para explicações, <ul>/<li> para listas.
+                            4. Para fórmulas matemáticas, usa a tag <code> ou <mark> para destaque, ou coloca-as em parágrafos separados para leitura fácil.
+                            5. Divide a resposta em 3 secções claras: <h4>Explicação</h4>, <h4>Exercícios</h4> e <h4>Soluções</h4>.`
+                        },
+                        {
+                            role: 'user',
+                            content: content
+                        }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                const errJson = await response.json().catch(() => ({}));
+                console.error('API Error:', errJson);
+                throw new Error(errJson.error?.message || `Erro de Servidor: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.choices && data.choices[0]) {
+                const aiResponse = data.choices[0].message.content;
+                this.displayStudyResult(aiResponse, input || 'Análise de Media');
+                this.clearSelectedMedia(); // Clear after success
+            } else {
+                throw new Error(data.error?.message || 'Resposta inválida da API');
+            }
+        } catch (error) {
+            console.error('Erro ao gerar estudo:', error);
+            alert(`Erro: ${error.message}`);
+        } finally {
+            this.studyBtn.disabled = false;
+            this.studyLoading.style.display = 'none';
+        }
+    },
+
+    handleMediaUpload(event, type) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Visual limit
+        if (this.selectedMedia.length >= 2) {
+            alert('Podes carregar no máximo 2 ficheiros por pedido.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const base64Data = e.target.result.split(',')[1];
+            const mediaItem = {
+                id: Date.now(),
+                type: type,
+                data: base64Data,
+                mimeType: file.type,
+                previewUrl: type === 'image' ? e.target.result : null
+            };
+
+            this.selectedMedia.push(mediaItem);
+            this.renderMediaPreviews();
+        };
+        reader.readAsDataURL(file);
+    },
+
+    async toggleVoiceRecording() {
+        if (this.isRecording) {
+            this.stopRecording();
+        } else {
+            await this.startRecording();
+        }
+    },
+
+    async startRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.mediaRecorder = new MediaRecorder(stream);
+            this.audioChunks = [];
+
+            this.mediaRecorder.ondataavailable = (event) => {
+                this.audioChunks.push(event.data);
+            };
+
+            this.mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                const base64Data = await this.blobToBase64(audioBlob);
+
+                this.selectedMedia.push({
+                    id: Date.now(),
+                    type: 'audio',
+                    data: base64Data,
+                    mimeType: 'audio/webm',
+                    previewUrl: null
+                });
+
+                this.renderMediaPreviews();
+                stream.getTracks().forEach(track => track.stop()); // Stop mic
+            };
+
+            this.mediaRecorder.start();
+            this.isRecording = true;
+            this.recordingStartTime = Date.now();
+            this.updateRecordingUI(true);
+
+            this.recordingInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - this.recordingStartTime) / 1000);
+                const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const secs = String(elapsed % 60).padStart(2, '0');
+                this.recordingTimer.innerText = `${mins}:${secs}`;
+            }, 1000);
+
+        } catch (err) {
+            console.error('Erro ao aceder ao microfone:', err);
+            alert('Não foi possível aceder ao microfone. Verifica as permissões.');
+        }
+    },
+
+    stopRecording() {
+        if (this.mediaRecorder && this.isRecording) {
+            this.mediaRecorder.stop();
+            this.isRecording = false;
+            clearInterval(this.recordingInterval);
+            this.updateRecordingUI(false);
+        }
+    },
+
+    updateRecordingUI(active) {
+        if (active) {
+            this.voiceRecordBtn.classList.add('recording');
+            this.recordingWaves.style.display = 'flex';
+        } else {
+            this.voiceRecordBtn.classList.remove('recording');
+            this.recordingWaves.style.display = 'none';
+            this.recordingTimer.innerText = '00:00';
+        }
+    },
+
+    blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    },
+
+    renderMediaPreviews() {
+        this.studyMediaPreview.innerHTML = '';
+        this.studyMediaPreview.style.display = this.selectedMedia.length > 0 ? 'flex' : 'none';
+        this.clearMediaBtn.style.display = this.selectedMedia.length > 0 ? 'block' : 'none';
+
+        this.selectedMedia.forEach((media) => {
+            const div = document.createElement('div');
+            div.className = `preview-item ${media.type}-preview`;
+
+            if (media.type === 'image') {
+                div.innerHTML = `<img src="${media.previewUrl}">`;
+            } else {
+                div.innerHTML = `<i class="fas fa-file-audio"></i><span>Áudio</span>`;
+            }
+
+            // Remove option
+            div.onclick = () => {
+                this.selectedMedia = this.selectedMedia.filter(m => m.id !== media.id);
+                this.renderMediaPreviews();
+            };
+
+            this.studyMediaPreview.appendChild(div);
+        });
+    },
+
+    clearSelectedMedia() {
+        this.selectedMedia = [];
+        this.renderMediaPreviews();
+        if (this.studyImageInput) this.studyImageInput.value = '';
+        if (this.studyAudioInput) this.studyAudioInput.value = '';
+    },
+
+    displayStudyResult(content, originalInput) {
+        this.studyContent.innerHTML = content;
+        this.studyResult.style.display = 'block';
+
+        // Add to history
+        const newItem = {
+            id: Date.now(),
+            input: originalInput,
+            result: content,
+            timestamp: new Date().toISOString()
+        };
+
+        this.studyHistory.unshift(newItem);
+        if (this.studyHistory.length > 20) this.studyHistory.pop(); // Keep last 20
+        this.save();
+        this.renderStudyHistory();
+    },
+
+    clearStudyResult() {
+        this.studyResult.style.display = 'none';
+        this.studyContent.innerHTML = '';
+        this.studyInput.value = '';
+    },
+
+    renderStudyHistory() {
+        if (!this.studyHistoryMiniContainer) return;
+
+        if (this.studyHistory.length === 0) {
+            this.studyHistoryMiniContainer.innerHTML = '<p class="text-muted">Ainda não tens histórico.</p>';
+            return;
+        }
+
+        this.studyHistoryMiniContainer.innerHTML = '';
+
+        // Show only last 2 items on the main study screen
+        const itemsToRender = this.studyHistory.slice(0, 2);
+
+        itemsToRender.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'history-item-card';
+
+            const title = item.input || item.title || 'Sem título';
+            const timestamp = item.timestamp || item.date;
+
+            card.innerHTML = `
+                <div class="history-item-info">
+                    <h5>${title}</h5>
+                    <small>${this.formatStudyDate(timestamp)}</small>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            `;
+
+            card.onclick = () => this.openStudyHistoryModal(item);
+            this.studyHistoryMiniContainer.appendChild(card);
+        });
+
+        if (this.viewAllHistoryBtn) {
+            this.viewAllHistoryBtn.style.display = this.studyHistory.length > 2 ? 'block' : 'none';
+        }
+    },
+
+    formatStudyDate(isoString) {
+        if (!isoString) return 'Data desconhecida';
+        const date = new Date(isoString);
+        if (isNaN(date.getTime())) return 'Data inválida';
+
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        const dateStr = date.toISOString().split('T')[0];
+        const todayStr = today.toISOString().split('T')[0];
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        if (dateStr === todayStr) return 'Hoje';
+        if (dateStr === yesterdayStr) return 'Ontem';
+
+        return date.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+    },
+
+    openFullHistoryModal() {
+        if (!this.studyFullHistoryModal) return;
+        this.renderFullHistoryList();
+        this.studyFullHistoryModal.style.display = 'flex';
+
+        // Close on overlay click
+        this.studyFullHistoryModal.onclick = (e) => {
+            if (e.target === this.studyFullHistoryModal) this.closeFullHistoryModal();
+        };
+    },
+
+    closeFullHistoryModal() {
+        if (this.studyFullHistoryModal) {
+            this.studyFullHistoryModal.style.display = 'none';
+        }
+    },
+
+    renderFullHistoryList() {
+        if (!this.fullHistoryList) return;
+        this.fullHistoryList.innerHTML = '';
+
+        if (this.studyHistory.length === 0) {
+            this.fullHistoryList.innerHTML = '<p class="text-muted" style="text-align: center; padding: 20px;">Ainda não tens histórico.</p>';
+            return;
+        }
+
+        this.studyHistory.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'history-item-card';
+
+            const title = item.input || item.title || 'Sem título';
+            const timestamp = item.timestamp || item.date;
+
+            card.innerHTML = `
+                <div class="history-item-info">
+                    <h5>${title}</h5>
+                    <small>${this.formatStudyDate(timestamp)}</small>
+                </div>
+                <div class="history-item-actions">
+                    <button class="btn-delete-history" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            `;
+
+            // Separate clicks
+            const info = card.querySelector('.history-item-info');
+            const delBtn = card.querySelector('.btn-delete-history');
+
+            info.onclick = (e) => {
+                e.stopPropagation();
+                this.openStudyHistoryModal(item);
+            };
+
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.deleteStudyHistoryItem(item.id);
+            };
+
+            card.onclick = () => this.openStudyHistoryModal(item);
+
+            this.fullHistoryList.appendChild(card);
+        });
+    },
+
+    deleteStudyHistoryItem(id) {
+        if (!confirm('Eliminar esta conversa do histórico?')) return;
+
+        this.studyHistory = this.studyHistory.filter(item => item.id !== id);
+        this.save();
+        this.renderStudyHistory();
+        this.renderFullHistoryList(); // Update the modal list
+
+        if (this.studyHistory.length === 0) {
+            this.closeFullHistoryModal();
+        }
+    },
+
+    openStudyHistoryModal(item) {
+        if (!this.studyHistoryModal) return;
+
+        const title = item.input || item.title || 'Sem título';
+        const result = item.result || item.content || 'Sem conteúdo';
+
+        this.historyModalTitle.innerText = title;
+        this.historyModalContent.innerHTML = result;
+        this.studyHistoryModal.style.display = 'flex';
+
+        // Close on overlay click
+        this.studyHistoryModal.onclick = (e) => {
+            if (e.target === this.studyHistoryModal) this.closeStudyHistoryModal();
+        };
+    },
+
+    closeStudyHistoryModal() {
+        if (this.studyHistoryModal) {
+            this.studyHistoryModal.style.display = 'none';
+        }
     }
 };
 
