@@ -6,7 +6,7 @@ const app = {
     tasks: JSON.parse(localStorage.getItem('tasks')) || [],
     goals: JSON.parse(localStorage.getItem('goals')) || [],
     studyHistory: JSON.parse(localStorage.getItem('studyHistory')) || [],
-    openRouterKey: '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',
+    openRouterKey: localStorage.getItem('openRouterKey') || '',
     currentScreen: 'home',
 
     init() {
@@ -57,6 +57,7 @@ const app = {
         this.studyHistoryList = document.getElementById('study-history-list');
         this.clearStudyBtn = document.getElementById('clear-study-btn');
         this.openRouterKeyInput = document.getElementById('openrouter-key');
+        this.saveOpenRouterKeyBtn = document.getElementById('save-openrouter-key');
 
         // Multimodal Study DOM
         this.studyImageInput = document.getElementById('study-image-input');
@@ -154,8 +155,33 @@ const app = {
         if (this.clearStudyBtn) this.clearStudyBtn.addEventListener('click', () => this.clearStudyResult());
         if (this.openRouterKeyInput) {
             this.openRouterKeyInput.value = this.openRouterKey;
-            this.openRouterKeyInput.addEventListener('change', (e) => {
-                this.openRouterKey = e.target.value;
+
+            const saveKey = () => {
+                const val = this.openRouterKeyInput.value.trim();
+                if (!val) {
+                    alert('Por favor, insere uma chave válida.');
+                    return;
+                }
+                this.openRouterKey = val;
+                localStorage.setItem('openRouterKey', this.openRouterKey);
+
+                // Visual feedback
+                const icon = this.saveOpenRouterKeyBtn.querySelector('i');
+                const originalClass = icon.className;
+                icon.className = 'fas fa-check-circle';
+                this.saveOpenRouterKeyBtn.style.color = 'var(--success)';
+
+                setTimeout(() => {
+                    icon.className = originalClass;
+                    this.saveOpenRouterKeyBtn.style.color = '';
+                }, 2000);
+            };
+
+            this.saveOpenRouterKeyBtn.addEventListener('click', saveKey);
+
+            // Still keep the auto-save on input for convenience
+            this.openRouterKeyInput.addEventListener('input', (e) => {
+                this.openRouterKey = e.target.value.trim();
                 localStorage.setItem('openRouterKey', this.openRouterKey);
             });
         }
@@ -1076,11 +1102,13 @@ const app = {
                             image_url: { url: `data:${media.mimeType};base64,${media.data}` }
                         });
                     } else if (media.type === 'audio') {
-                        // For audio, many providers use this structure or simply a generic media block
-                        // Gemini via OpenRouter is very flexible with data URIs
+                        // OpenRouter/OpenAI compatible audio format
                         content.push({
-                            type: 'image_url',
-                            image_url: { url: `data:${media.mimeType};base64,${media.data}` }
+                            type: 'input_audio',
+                            input_audio: {
+                                data: media.data,
+                                format: media.mimeType.split('/')[1] || 'webm'
+                            }
                         });
                     }
                 });
@@ -1098,18 +1126,9 @@ const app = {
                 content = input;
             }
 
-            console.log('DaySignal: Pedido enviado com o modelo Gemini 2.0 Flash Exp...');
-
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.openRouterKey.trim()}`,
-                    'HTTP-Referer': 'https://daysignal.app',
-                    'X-Title': 'DaySignalStudy'
-                },
-                body: JSON.stringify({
-                    model: 'google/gemini-2.0-flash-001',
+            const callAPI = async (modelId) => {
+                const body = JSON.stringify({
+                    model: modelId,
                     messages: [
                         {
                             role: 'system',
@@ -1126,16 +1145,39 @@ const app = {
                             content: content
                         }
                     ]
-                })
-            });
+                });
 
-            if (!response.ok) {
-                const errJson = await response.json().catch(() => ({}));
-                console.error('API Error:', errJson);
-                throw new Error(errJson.error?.message || `Erro de Servidor: ${response.status}`);
+                console.log(`DaySignal: Tentando com o modelo ${modelId}...`);
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.openRouterKey.trim()}`,
+                        'HTTP-Referer': 'https://daysignal.app',
+                        'X-Title': 'DaySignalStudy'
+                    },
+                    body: body
+                });
+
+                if (!response.ok) {
+                    const errJson = await response.json().catch(() => ({}));
+                    console.error(`API Error (${modelId}):`, JSON.stringify(errJson, null, 2));
+                    throw { status: response.status, data: errJson };
+                }
+                return await response.json();
+            };
+
+            let data;
+            try {
+                // Primary: Gemini 2.0 Flash (Stable)
+                data = await callAPI('google/gemini-2.0-flash-001');
+            } catch (err) {
+                if (err.status === 401) throw err; // Don't fallback on auth errors
+                // Secondary: Gemini 1.5 Flash (Most reliable fallback)
+                console.warn('DaySignal: Falha com 2.0. Tentando fallback para 1.5...');
+                data = await callAPI('google/gemini-flash-1.5');
             }
 
-            const data = await response.json();
             if (data.choices && data.choices[0]) {
                 const aiResponse = data.choices[0].message.content;
                 this.displayStudyResult(aiResponse, input || 'Análise de Media');
@@ -1145,7 +1187,17 @@ const app = {
             }
         } catch (error) {
             console.error('Erro ao gerar estudo:', error);
-            alert(`Erro: ${error.message}`);
+
+            let finalMsg = "Erro ao gerar estudo. ";
+            if (error.status === 401) {
+                finalMsg += "Verifica se a tua chave API do OpenRouter e valida e se tens saldo.";
+            } else if (error.status === 500) {
+                finalMsg += "O servidor do OpenRouter falhou. Tenta novamente mais tarde.";
+            } else {
+                finalMsg += error.data?.error?.message || error.message || "Erro desconhecido.";
+            }
+
+            alert(finalMsg);
         } finally {
             this.studyBtn.disabled = false;
             this.studyLoading.style.display = 'none';
@@ -1157,6 +1209,11 @@ const app = {
         if (!file) return;
 
         // Visual limit
+        const hasAudio = this.selectedMedia.some(m => m.type === 'audio');
+        if (type === 'audio' && hasAudio) {
+            alert('Podes carregar apenas 1 ficheiro de áudio por pedido.');
+            return;
+        }
         if (this.selectedMedia.length >= 2) {
             alert('Podes carregar no máximo 2 ficheiros por pedido.');
             return;
@@ -1200,6 +1257,13 @@ const app = {
             this.mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
                 const base64Data = await this.blobToBase64(audioBlob);
+
+                const hasAudio = this.selectedMedia.some(m => m.type === 'audio');
+                if (hasAudio) {
+                    alert('Já tens um ficheiro de áudio. Remove-o antes de gravar um novo.');
+                    stream.getTracks().forEach(track => track.stop());
+                    return;
+                }
 
                 this.selectedMedia.push({
                     id: Date.now(),

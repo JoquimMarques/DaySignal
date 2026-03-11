@@ -170,7 +170,13 @@
                             <span>Chave API OpenRouter</span>
                             <small>Necessária para as funcionalidades de IA</small>
                         </div>
-                        <input type="password" id="openrouter-key" placeholder="sk-or-v1-..." class="settings-input">
+                        <div class="api-key-container"
+                            style="display: flex; gap: 8px; align-items: center; width: 100%;">
+                            <input type="password" id="openrouter-key" placeholder="sk-or-v1-..." class="settings-input"
+                                style="flex: 1;">
+                            <button id="save-openrouter-key" class="btn-icon-minimal" title="Gravar Chave"><i
+                                    class="fas fa-save"></i></button>
+                        </div>
                     </div>
                     <div class="settings-item">
                         <span>Tema Escuro</span>
@@ -195,9 +201,7 @@
             <section id="screen-study" class="screen">
                 <div class="study-container">
                     <div class="study-input-card">
-                        <textarea id="study-input"
-                            placeholder="Escreve aqui a tua"
-                            maxlength="1000"></textarea>
+                        <textarea id="study-input" placeholder="Escreve aqui a tua" maxlength="1000"></textarea>
 
                         <div id="study-media-preview" class="media-preview-area" style="display: none;">
                             <!-- Previews will appear here -->
